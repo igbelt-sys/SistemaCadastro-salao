@@ -93,14 +93,58 @@ O sistema será utilizado individualmente por uma terapeuta capilar/cabeleireira
 
 --- 
 
-## Requisitos nao funcionais 
-- RNF01: O sistema deve possuir uma interface simples e de fácil utilização.
-- RNF02: O sistema deve ser utilizado em ambiente web.
-- RNF03: O sistema deve permitir acesso apenas para usuários autenticados.
+
+## Requisitos Não Funcionais
+
+- RNF01: O sistema deve possuir interface simples e intuitiva.
+- RNF02: O sistema deve ser desenvolvido para ambiente web.
+- RNF03: O sistema deve permitir acesso apenas mediante autenticação.
 - RNF04: O sistema deve armazenar os dados em banco de dados relacional.
-- RNF05: O sistema deve apresentar carregamento rápido das informações.
-- RNF06: O sistema deve possuir organização visual limpa e intuitiva.
-- RNF07: O sistema deve permitir consultas e cadastros de forma prática.
-- RNF08: O sistema deve garantir armazenamento correto das informações cadastradas.
-- RNF09: O sistema deve ser desenvolvido com foco em simplicidade e facilidade de manutenção.
-- RNF10: O sistema deve funcionar em computadores com acesso à internet.
+- RNF05: O sistema deve apresentar tempo de resposta adequado nas consultas e cadastros.
+- RNF06: O sistema deve possuir organização visual limpa e de fácil navegação.
+- RNF07: O sistema deve garantir integridade das informações cadastradas.
+- RNF08: O sistema deve ser desenvolvido com foco em facilidade de manutenção.
+- RNF09: O sistema deve permitir utilização em computadores com acesso à internet.
+- RNF10: O sistema deve possuir compatibilidade com navegadores modernos.
+
+## Regras de Negócio
+
+- RN01: Cada cliente deve possuir pelo menos um nome cadastrado.
+- RN02: Clientes podem possuir observações e informações sobre características capilares.
+- RN03: O histórico de sessões deverá ser cadastrado manualmente pela profissional.
+- RN04: Cada registro de histórico deve estar vinculado a um cliente.
+- RN05: Produtos devem possuir nome para serem cadastrados.
+- RN06: Serviços devem possuir nome e valor base cadastrados.
+- RN07: Somente usuários autenticados poderão acessar o sistema.
+- RN08: O sistema deverá permitir edição e exclusão de registros cadastrados.
+- RN09: O sistema deverá armazenar as informações de clientes, produtos e serviços de forma organizada.
+- RN10: O sistema será utilizado apenas pela profissional responsável pelos atendimentos.
+
+## Estrutura do banco de dados
+### Entidades do sistema 
+---
+#### Usuários
+    - id
+    - nome
+    - email 
+    - senha
+
+#### Clientes
+    - id
+    - nome 
+    - observacoes
+    - historico
+    - criacao_at (campo que guarda data de criação)
+
+#### Produtos
+    - id
+    - nome
+    - descrição 
+    - marca
+    - quantidade
+#### Historico_clientes
+    - cliente_id
+    - servico_id
+    - data_historico
+    - observacao
+---
