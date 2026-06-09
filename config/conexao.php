@@ -6,6 +6,9 @@ const DB_PORT = '5432';
 const DB_NAME = 'sistemasalao';
 const DB_USER = 'postgres';
 const DB_PASS = 'postgres';
+const APP_TIMEZONE = 'America/Sao_Paulo';
+
+date_default_timezone_set(APP_TIMEZONE);
 
 function conectar(): PDO
 {
@@ -27,6 +30,7 @@ function conectar(): PDO
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
         ]);
+        $pdo->exec("SET TIME ZONE '" . APP_TIMEZONE . "'");
     } catch (PDOException $erro) {
         exit('Erro ao conectar com o banco de dados: ' . $erro->getMessage());
     }

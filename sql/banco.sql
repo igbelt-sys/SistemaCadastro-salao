@@ -10,7 +10,7 @@ CREATE TABLE clientes (
     nome VARCHAR(100) NOT NULL,
     telefone VARCHAR(20),
     observacoes TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    criado_em TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')
 );
 
 CREATE TABLE produtos (
@@ -34,7 +34,7 @@ CREATE TABLE historico_clientes (
     cliente_id INTEGER NOT NULL,
     servico_id INTEGER,
 
-    data_historico DATE DEFAULT CURRENT_DATE,
+    data_historico DATE DEFAULT ((CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')::DATE),
 
     observacao TEXT,
 
@@ -48,3 +48,7 @@ CREATE TABLE historico_clientes (
         REFERENCES servicos(id)
         ON DELETE SET NULL
 );
+
+CREATE UNIQUE INDEX ux_clientes_telefone_normalizado
+    ON clientes ((regexp_replace(telefone, '[^0-9]', '', 'g')))
+    WHERE telefone IS NOT NULL AND btrim(telefone) <> '';

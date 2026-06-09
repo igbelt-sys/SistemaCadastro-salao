@@ -15,32 +15,59 @@ $produto = buscarProduto($pdo, $id);
 if ($produto === null) {
     irPara('index.php?msg=' . urlencode('Produto nao encontrado.'));
 }
+
+$pageTitle = 'Silvana | Visualizar produto';
+$basePath = '../';
+$activeSection = 'produtos';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizar produto</title>
-</head>
-<body>
-    <h1>Visualizar produto</h1>
+<?php require __DIR__ . '/../includes/head.php'; ?>
+<?php require __DIR__ . '/../includes/sidebar.php'; ?>
+<section class="page-header">
+    <div>
+        <span class="page-eyebrow">Detalhes do produto</span>
+        <h1 class="page-title">Visualizar produto</h1>
+        <p class="page-description">Confira os dados do produto antes de seguir para edi&ccedil;&atilde;o ou exclus&atilde;o.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn--ghost" href="index.php">Voltar para produtos</a>
+        <a class="btn btn--secondary" href="editar-produto.php?id=<?= $id ?>">Editar</a>
+        <a class="btn btn--danger" href="excluir-produto.php?id=<?= $id ?>">Excluir</a>
+    </div>
+</section>
 
-    <p>
-        <a href="index.php">Voltar para produtos</a> |
-        <a href="editar-produto.php?id=<?= $id ?>">Editar</a> |
-        <a href="excluir-produto.php?id=<?= $id ?>">Excluir</a>
-    </p>
+<?php if ($mensagem !== ''): ?>
+    <div class="alert"><?= escapar($mensagem) ?></div>
+<?php endif; ?>
 
-    <?php if ($mensagem !== ''): ?>
-        <p><strong><?= escapar($mensagem) ?></strong></p>
-    <?php endif; ?>
+<section class="panel panel--soft">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Dados do produto</h2>
+            <p class="section-copy">Informa&ccedil;&otilde;es registradas para consulta r&aacute;pida.</p>
+        </div>
+    </div>
 
-    <h2>Dados do produto</h2>
-    <p><strong>ID:</strong> <?= (int) $produto['id'] ?></p>
-    <p><strong>Nome:</strong> <?= escapar((string) $produto['nome']) ?></p>
-    <p><strong>Descricao:</strong><br><?= nl2br(escapar((string) ($produto['descricao'] ?? ''))) ?></p>
-    <p><strong>Marca:</strong> <?= escapar((string) ($produto['marca'] ?? '')) ?></p>
-    <p><strong>Quantidade:</strong> <?= (int) ($produto['quantidade'] ?? 0) ?></p>
-</body>
-</html>
+    <div class="detail-grid">
+        <article class="detail-item">
+            <span class="detail-label">ID</span>
+            <p class="detail-value"><?= (int) $produto['id'] ?></p>
+        </article>
+        <article class="detail-item">
+            <span class="detail-label">Quantidade</span>
+            <p class="detail-value"><?= (int) ($produto['quantidade'] ?? 0) ?></p>
+        </article>
+        <article class="detail-item">
+            <span class="detail-label">Nome</span>
+            <p class="detail-value"><?= escapar((string) $produto['nome']) ?></p>
+        </article>
+        <article class="detail-item">
+            <span class="detail-label">Marca</span>
+            <p class="detail-value"><?= escapar((string) ($produto['marca'] ?? '')) ?></p>
+        </article>
+        <article class="detail-item detail-item--full">
+            <span class="detail-label">Descricao</span>
+            <p class="detail-value"><?= nl2br(escapar((string) ($produto['descricao'] ?? ''))) ?></p>
+        </article>
+    </div>
+</section>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

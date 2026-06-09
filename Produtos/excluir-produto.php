@@ -22,28 +22,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     irPara('index.php?msg=' . urlencode('Produto excluido com sucesso.'));
 }
+
+$pageTitle = 'Silvana | Excluir produto';
+$basePath = '../';
+$activeSection = 'produtos';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excluir produto</title>
-</head>
-<body>
-    <h1>Excluir produto</h1>
+<?php require __DIR__ . '/../includes/head.php'; ?>
+<?php require __DIR__ . '/../includes/sidebar.php'; ?>
+<section class="page-header">
+    <div>
+        <span class="page-eyebrow">Acao sensivel</span>
+        <h1 class="page-title">Excluir produto</h1>
+        <p class="page-description">Revise a confirma&ccedil;&atilde;o com cuidado antes de remover este item do cadastro.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn--ghost" href="index.php">Voltar para produtos</a>
+        <a class="btn btn--secondary" href="visualizar-produto.php?id=<?= $id ?>">Cancelar</a>
+    </div>
+</section>
 
-    <p>
-        <a href="index.php">Voltar para produtos</a> |
-        <a href="visualizar-produto.php?id=<?= $id ?>">Visualizar produto</a>
-    </p>
+<section class="confirm-shell">
+    <article class="confirm-card">
+        <div class="confirm-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 9v4"></path>
+                <path d="M12 17h.01"></path>
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.72 3h16.92a2 2 0 0 0 1.72-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+            </svg>
+        </div>
+        <h2 class="confirm-title">Confirmar exclusao</h2>
+        <p class="confirm-copy">Tem certeza que deseja excluir este produto? O processamento continua exatamente o mesmo.</p>
+        <p class="confirm-target"><?= escapar((string) $produto['nome']) ?></p>
 
-    <p>Tem certeza que deseja excluir este produto?</p>
-    <p><strong><?= escapar((string) $produto['nome']) ?></strong></p>
-
-    <form method="post">
-        <input type="hidden" name="id" value="<?= $id ?>">
-        <button type="submit">Confirmar exclusao</button>
-    </form>
-</body>
-</html>
+        <form method="post" class="form-actions confirm-actions">
+            <input type="hidden" name="id" value="<?= $id ?>">
+            <button class="btn btn--danger" type="submit">Confirmar exclusao</button>
+            <a class="btn btn--secondary" href="visualizar-produto.php?id=<?= $id ?>">Cancelar</a>
+        </form>
+    </article>
+</section>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

@@ -15,31 +15,55 @@ $servico = buscarServico($pdo, $id);
 if ($servico === null) {
     irPara('index.php?msg=' . urlencode('Servico nao encontrado.'));
 }
+
+$pageTitle = 'Silvana | Visualizar servico';
+$basePath = '../';
+$activeSection = 'servicos';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizar servico</title>
-</head>
-<body>
-    <h1>Visualizar servico</h1>
+<?php require __DIR__ . '/../includes/head.php'; ?>
+<?php require __DIR__ . '/../includes/sidebar.php'; ?>
+<section class="page-header">
+    <div>
+        <span class="page-eyebrow">Detalhes do servico</span>
+        <h1 class="page-title">Visualizar servico</h1>
+        <p class="page-description">Confira os dados do servi&ccedil;o antes de seguir para edi&ccedil;&atilde;o ou exclus&atilde;o.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn--ghost" href="index.php">Voltar para servicos</a>
+        <a class="btn btn--secondary" href="editar-servico.php?id=<?= $id ?>">Editar</a>
+        <a class="btn btn--danger" href="excluir-servico.php?id=<?= $id ?>">Excluir</a>
+    </div>
+</section>
 
-    <p>
-        <a href="index.php">Voltar para servicos</a> |
-        <a href="editar-servico.php?id=<?= $id ?>">Editar</a> |
-        <a href="excluir-servico.php?id=<?= $id ?>">Excluir</a>
-    </p>
+<?php if ($mensagem !== ''): ?>
+    <div class="alert"><?= escapar($mensagem) ?></div>
+<?php endif; ?>
 
-    <?php if ($mensagem !== ''): ?>
-        <p><strong><?= escapar($mensagem) ?></strong></p>
-    <?php endif; ?>
+<section class="panel panel--soft">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Dados do servico</h2>
+            <p class="section-copy">Informa&ccedil;&otilde;es do servi&ccedil;o armazenadas para consulta.</p>
+        </div>
+    </div>
 
-    <h2>Dados do servico</h2>
-    <p><strong>ID:</strong> <?= (int) $servico['id'] ?></p>
-    <p><strong>Nome:</strong> <?= escapar((string) $servico['nome']) ?></p>
-    <p><strong>Descricao:</strong><br><?= nl2br(escapar((string) ($servico['descricao'] ?? ''))) ?></p>
-    <p><strong>Valor base:</strong> R$ <?= number_format((float) $servico['valor_base'], 2, ',', '.') ?></p>
-</body>
-</html>
+    <div class="detail-grid">
+        <article class="detail-item">
+            <span class="detail-label">ID</span>
+            <p class="detail-value"><?= (int) $servico['id'] ?></p>
+        </article>
+        <article class="detail-item">
+            <span class="detail-label">Valor base</span>
+            <p class="detail-value">R$ <?= number_format((float) $servico['valor_base'], 2, ',', '.') ?></p>
+        </article>
+        <article class="detail-item detail-item--full">
+            <span class="detail-label">Nome</span>
+            <p class="detail-value"><?= escapar((string) $servico['nome']) ?></p>
+        </article>
+        <article class="detail-item detail-item--full">
+            <span class="detail-label">Descricao</span>
+            <p class="detail-value"><?= nl2br(escapar((string) ($servico['descricao'] ?? ''))) ?></p>
+        </article>
+    </div>
+</section>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

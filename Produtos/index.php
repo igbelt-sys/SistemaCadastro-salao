@@ -25,64 +25,83 @@ if ($pesquisa !== '') {
 
 $stmt->execute();
 $produtos = $stmt->fetchAll();
+
+$pageTitle = 'Silvana | Produtos';
+$basePath = '../';
+$activeSection = 'produtos';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Produtos</title>
-</head>
-<body>
-    <h1>Produtos</h1>
+<?php require __DIR__ . '/../includes/head.php'; ?>
+<?php require __DIR__ . '/../includes/sidebar.php'; ?>
+<section class="page-header">
+    <div>
+        <span class="page-eyebrow">Gestao de produtos</span>
+        <h1 class="page-title">Produtos</h1>
+        <p class="page-description">Organize os produtos utilizados nos atendimentos com uma listagem clara, elegante e funcional.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn--primary" href="adicionar-produto.php">Cadastrar produto</a>
+    </div>
+</section>
 
-    <p>
-        <a href="../index.php">Inicio</a> |
-        <a href="adicionar-produto.php">Cadastrar produto</a>
-    </p>
+<?php if ($mensagem !== ''): ?>
+    <div class="alert"><?= escapar($mensagem) ?></div>
+<?php endif; ?>
 
-    <?php if ($mensagem !== ''): ?>
-        <p><strong><?= escapar($mensagem) ?></strong></p>
-    <?php endif; ?>
-
-    <form method="get">
-        <label for="pesquisa">Pesquisar:</label>
-        <input type="text" name="pesquisa" id="pesquisa" value="<?= escapar($pesquisa) ?>">
-        <button type="submit">Pesquisar</button>
-        <a href="index.php">Limpar</a>
+<section class="panel panel--soft">
+    <form method="get" class="toolbar-search">
+        <div class="field field--grow">
+            <label for="pesquisa">Pesquisar por nome ou marca</label>
+            <input type="text" name="pesquisa" id="pesquisa" value="<?= escapar($pesquisa) ?>">
+        </div>
+        <div class="page-actions">
+            <button class="btn btn--primary" type="submit">Pesquisar</button>
+            <a class="btn btn--ghost" href="index.php">Limpar</a>
+        </div>
     </form>
+</section>
 
-    <h2>Lista de produtos</h2>
+<section class="panel">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Lista de produtos</h2>
+            <p class="section-copy">Acompanhe os produtos cadastrados e siga para visualizar, editar ou excluir.</p>
+        </div>
+        <span class="count-badge"><?= count($produtos) ?></span>
+    </div>
 
     <?php if (empty($produtos)): ?>
-        <p>Nenhum produto encontrado.</p>
+        <div class="empty-state">Nenhum produto encontrado.</div>
     <?php else: ?>
-        <table border="1" cellpadding="8" cellspacing="0">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>Marca</th>
-                    <th>Quantidade</th>
-                    <th>Acoes</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($produtos as $produto): ?>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <td><?= (int) $produto['id'] ?></td>
-                        <td><?= escapar((string) $produto['nome']) ?></td>
-                        <td><?= escapar((string) ($produto['marca'] ?? '')) ?></td>
-                        <td><?= (int) ($produto['quantidade'] ?? 0) ?></td>
-                        <td>
-                            <a href="visualizar-produto.php?id=<?= (int) $produto['id'] ?>">Visualizar</a> |
-                            <a href="editar-produto.php?id=<?= (int) $produto['id'] ?>">Editar</a> |
-                            <a href="excluir-produto.php?id=<?= (int) $produto['id'] ?>">Excluir</a>
-                        </td>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Marca</th>
+                        <th>Quantidade</th>
+                        <th>Acoes</th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach ($produtos as $produto): ?>
+                        <tr>
+                            <td><?= (int) $produto['id'] ?></td>
+                            <td><?= escapar((string) $produto['nome']) ?></td>
+                            <td><?= escapar((string) ($produto['marca'] ?? '')) ?></td>
+                            <td><?= (int) ($produto['quantidade'] ?? 0) ?></td>
+                            <td>
+                                <div class="table-actions">
+                                    <a class="pill-link pill-link--view" href="visualizar-produto.php?id=<?= (int) $produto['id'] ?>">Visualizar</a>
+                                    <a class="pill-link pill-link--edit" href="editar-produto.php?id=<?= (int) $produto['id'] ?>">Editar</a>
+                                    <a class="pill-link pill-link--danger" href="excluir-produto.php?id=<?= (int) $produto['id'] ?>">Excluir</a>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     <?php endif; ?>
-</body>
-</html>
+</section>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

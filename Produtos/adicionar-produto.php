@@ -50,51 +50,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         irPara('visualizar-produto.php?id=' . $id . '&msg=' . urlencode('Produto cadastrado com sucesso.'));
     }
 }
+
+$pageTitle = 'Silvana | Cadastrar produto';
+$basePath = '../';
+$activeSection = 'produtos';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastrar produto</title>
-</head>
-<body>
-    <h1>Cadastrar produto</h1>
+<?php require __DIR__ . '/../includes/head.php'; ?>
+<?php require __DIR__ . '/../includes/sidebar.php'; ?>
+<section class="page-header">
+    <div>
+        <span class="page-eyebrow">Novo cadastro</span>
+        <h1 class="page-title">Cadastrar produto</h1>
+        <p class="page-description">Cadastre um novo produto mantendo o mesmo fluxo de valida&ccedil;&atilde;o e persist&ecirc;ncia existente.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn--ghost" href="index.php">Voltar para produtos</a>
+    </div>
+</section>
 
-    <p><a href="index.php">Voltar para produtos</a></p>
+<?php if (!empty($erros)): ?>
+    <ul class="notice-list">
+        <?php foreach ($erros as $erro): ?>
+            <li><?= escapar($erro) ?></li>
+        <?php endforeach; ?>
+    </ul>
+<?php endif; ?>
 
-    <?php if (!empty($erros)): ?>
-        <ul>
-            <?php foreach ($erros as $erro): ?>
-                <li><?= escapar($erro) ?></li>
-            <?php endforeach; ?>
-        </ul>
-    <?php endif; ?>
+<section class="panel panel--soft">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Dados do produto</h2>
+            <p class="section-copy">Use os mesmos campos j&aacute; esperados pela regra atual da aplica&ccedil;&atilde;o.</p>
+        </div>
+    </div>
 
-    <form method="post">
-        <p>
-            <label for="nome">Nome:</label><br>
+    <form method="post" class="form-grid">
+        <div class="field">
+            <label for="nome">Nome</label>
             <input type="text" name="nome" id="nome" value="<?= escapar($nome) ?>" required>
-        </p>
+        </div>
 
-        <p>
-            <label for="descricao">Descricao:</label><br>
-            <textarea name="descricao" id="descricao" rows="5" cols="50"><?= escapar($descricao) ?></textarea>
-        </p>
-
-        <p>
-            <label for="marca">Marca:</label><br>
+        <div class="field">
+            <label for="marca">Marca</label>
             <input type="text" name="marca" id="marca" value="<?= escapar($marca) ?>">
-        </p>
+        </div>
 
-        <p>
-            <label for="quantidade">Quantidade:</label><br>
+        <div class="field field--full">
+            <label for="descricao">Descricao</label>
+            <textarea name="descricao" id="descricao" rows="5" cols="50"><?= escapar($descricao) ?></textarea>
+        </div>
+
+        <div class="field">
+            <label for="quantidade">Quantidade</label>
             <input type="number" name="quantidade" id="quantidade" min="0" value="<?= escapar($quantidade) ?>">
-        </p>
+        </div>
 
-        <p>
-            <button type="submit">Salvar produto</button>
-        </p>
+        <div class="form-actions field--full">
+            <button class="btn btn--primary" type="submit">Salvar produto</button>
+            <a class="btn btn--secondary" href="index.php">Cancelar</a>
+        </div>
     </form>
-</body>
-</html>
+</section>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

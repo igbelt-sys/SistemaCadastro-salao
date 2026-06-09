@@ -52,51 +52,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         irPara('visualizar-servico.php?id=' . $id . '&msg=' . urlencode('Servico atualizado com sucesso.'));
     }
 }
+
+$pageTitle = 'Silvana | Editar servico';
+$basePath = '../';
+$activeSection = 'servicos';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar servico</title>
-</head>
-<body>
-    <h1>Editar servico</h1>
+<?php require __DIR__ . '/../includes/head.php'; ?>
+<?php require __DIR__ . '/../includes/sidebar.php'; ?>
+<section class="page-header">
+    <div>
+        <span class="page-eyebrow">Atualizacao de cadastro</span>
+        <h1 class="page-title">Editar servico</h1>
+        <p class="page-description">Atualize descri&ccedil;&atilde;o e valor do servi&ccedil;o sem alterar a l&oacute;gica do cadastro.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn--ghost" href="index.php">Voltar para servicos</a>
+        <a class="btn btn--secondary" href="visualizar-servico.php?id=<?= $id ?>">Visualizar servico</a>
+    </div>
+</section>
 
-    <p>
-        <a href="index.php">Voltar para servicos</a> |
-        <a href="visualizar-servico.php?id=<?= $id ?>">Visualizar servico</a>
-    </p>
+<?php if (!empty($erros)): ?>
+    <ul class="notice-list">
+        <?php foreach ($erros as $erro): ?>
+            <li><?= escapar($erro) ?></li>
+        <?php endforeach; ?>
+    </ul>
+<?php endif; ?>
 
-    <?php if (!empty($erros)): ?>
-        <ul>
-            <?php foreach ($erros as $erro): ?>
-                <li><?= escapar($erro) ?></li>
-            <?php endforeach; ?>
-        </ul>
-    <?php endif; ?>
+<section class="panel panel--soft">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Dados para edi&ccedil;&atilde;o</h2>
+            <p class="section-copy">Os campos carregados continuam usando os mesmos nomes e o mesmo processamento.</p>
+        </div>
+    </div>
 
-    <form method="post">
+    <form method="post" class="form-grid">
         <input type="hidden" name="id" value="<?= $id ?>">
 
-        <p>
-            <label for="nome">Nome:</label><br>
+        <div class="field">
+            <label for="nome">Nome</label>
             <input type="text" name="nome" id="nome" value="<?= escapar($nome) ?>" required>
-        </p>
+        </div>
 
-        <p>
-            <label for="descricao">Descricao:</label><br>
-            <textarea name="descricao" id="descricao" rows="5" cols="50"><?= escapar($descricao) ?></textarea>
-        </p>
-
-        <p>
-            <label for="valor_base">Valor base:</label><br>
+        <div class="field">
+            <label for="valor_base">Valor base</label>
             <input type="number" name="valor_base" id="valor_base" step="0.01" min="0" value="<?= escapar($valorBase) ?>" required>
-        </p>
+        </div>
 
-        <p>
-            <button type="submit">Atualizar servico</button>
-        </p>
+        <div class="field field--full">
+            <label for="descricao">Descricao</label>
+            <textarea name="descricao" id="descricao" rows="5" cols="50"><?= escapar($descricao) ?></textarea>
+        </div>
+
+        <div class="form-actions field--full">
+            <button class="btn btn--primary" type="submit">Atualizar servico</button>
+            <a class="btn btn--secondary" href="visualizar-servico.php?id=<?= $id ?>">Cancelar</a>
+        </div>
     </form>
-</body>
-</html>
+</section>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

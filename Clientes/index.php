@@ -25,66 +25,87 @@ if ($pesquisa !== '') {
 
 $stmt->execute();
 $clientes = $stmt->fetchAll();
+
+$pageTitle = 'Silvana | Clientes';
+$basePath = '../';
+$activeSection = 'clientes';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clientes</title>
-</head>
-<body>
-    <h1>Clientes</h1>
+<?php require __DIR__ . '/../includes/head.php'; ?>
+<?php require __DIR__ . '/../includes/sidebar.php'; ?>
+<section class="page-header">
+    <div>
+        <span class="page-eyebrow">Gestao de clientes</span>
+        <h1 class="page-title">Clientes</h1>
+        <p class="page-description">
+            Consulte cadastros, acompanhe observa&ccedil;&otilde;es e acesse as a&ccedil;&otilde;es principais em um ambiente visual leve e organizado.
+        </p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn--primary" href="adicionar-cliente.php">Cadastrar cliente</a>
+    </div>
+</section>
 
-    <p>
-        <a href="../index.php">Inicio</a> |
-        <a href="adicionar-cliente.php">Cadastrar cliente</a>
-    </p>
+<?php if ($mensagem !== ''): ?>
+    <div class="alert"><?= escapar($mensagem) ?></div>
+<?php endif; ?>
 
-    <?php if ($mensagem !== ''): ?>
-        <p><strong><?= escapar($mensagem) ?></strong></p>
-    <?php endif; ?>
-
-    <form method="get">
-        <label for="pesquisa">Pesquisar por nome:</label>
-        <input type="text" name="pesquisa" id="pesquisa" value="<?= escapar($pesquisa) ?>">
-        <button type="submit">Pesquisar</button>
-        <a href="index.php">Limpar</a>
+<section class="panel panel--soft">
+    <form method="get" class="toolbar-search">
+        <div class="field field--grow">
+            <label for="pesquisa">Pesquisar por nome</label>
+            <input type="text" name="pesquisa" id="pesquisa" value="<?= escapar($pesquisa) ?>">
+        </div>
+        <div class="page-actions">
+            <button class="btn btn--primary" type="submit">Pesquisar</button>
+            <a class="btn btn--ghost" href="index.php">Limpar</a>
+        </div>
     </form>
+</section>
 
-    <h2>Lista de clientes</h2>
+<section class="panel">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Lista de clientes</h2>
+            <p class="section-copy">Visualize os registros cadastrados e siga para visualizar, editar ou excluir.</p>
+        </div>
+        <span class="count-badge"><?= count($clientes) ?></span>
+    </div>
 
     <?php if (empty($clientes)): ?>
-        <p>Nenhum cliente encontrado.</p>
+        <div class="empty-state">Nenhum cliente encontrado.</div>
     <?php else: ?>
-        <table border="1" cellpadding="8" cellspacing="0">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>Telefone</th>
-                    <th>Observacoes</th>
-                    <th>Criado em</th>
-                    <th>Acoes</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($clientes as $cliente): ?>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <td><?= (int) $cliente['id'] ?></td>
-                        <td><?= escapar((string) $cliente['nome']) ?></td>
-                        <td><?= escapar((string) ($cliente['telefone'] ?? '')) ?></td>
-                        <td><?= nl2br(escapar((string) ($cliente['observacoes'] ?? ''))) ?></td>
-                        <td><?= escapar((string) $cliente['criado_em']) ?></td>
-                        <td>
-                            <a href="visualizar-cliente.php?id=<?= (int) $cliente['id'] ?>">Visualizar</a> |
-                            <a href="editar-cliente.php?id=<?= (int) $cliente['id'] ?>">Editar</a> |
-                            <a href="excluir-cliente.php?id=<?= (int) $cliente['id'] ?>">Excluir</a>
-                        </td>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Telefone</th>
+                        <th>Observacoes</th>
+                        <th>Criado em</th>
+                        <th>Acoes</th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach ($clientes as $cliente): ?>
+                        <tr>
+                            <td><?= (int) $cliente['id'] ?></td>
+                            <td><?= escapar((string) $cliente['nome']) ?></td>
+                            <td><?= escapar((string) ($cliente['telefone'] ?? '')) ?></td>
+                            <td><?= nl2br(escapar((string) ($cliente['observacoes'] ?? ''))) ?></td>
+                            <td><?= escapar(formatarDataHora((string) $cliente['criado_em'])) ?></td>
+                            <td>
+                                <div class="table-actions">
+                                    <a class="pill-link pill-link--view" href="visualizar-cliente.php?id=<?= (int) $cliente['id'] ?>">Visualizar</a>
+                                    <a class="pill-link pill-link--edit" href="editar-cliente.php?id=<?= (int) $cliente['id'] ?>">Editar</a>
+                                    <a class="pill-link pill-link--danger" href="excluir-cliente.php?id=<?= (int) $cliente['id'] ?>">Excluir</a>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     <?php endif; ?>
-</body>
-</html>
+</section>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

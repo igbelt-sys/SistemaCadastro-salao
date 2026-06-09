@@ -18,68 +18,100 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erros[] = 'O nome da cliente e obrigatorio.';
     }
 
+    $clienteComMesmoTelefone = buscarClientePorTelefone($pdo, $telefone);
+    if ($clienteComMesmoTelefone !== null) {
+        $erros[] = montarMensagemTelefoneDuplicado($clienteComMesmoTelefone);
+    }
+
     if (empty($erros)) {
         $sql = 'INSERT INTO clientes (nome, telefone, observacoes)
                 VALUES (:nome, :telefone, :observacoes)
                 RETURNING id';
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(':nome', $nome, PDO::PARAM_STR);
-        if ($telefone === '') {
-            $stmt->bindValue(':telefone', null, PDO::PARAM_NULL);
-        } else {
-            $stmt->bindValue(':telefone', $telefone, PDO::PARAM_STR);
-        }
-        if ($observacoes === '') {
-            $stmt->bindValue(':observacoes', null, PDO::PARAM_NULL);
-        } else {
-            $stmt->bindValue(':observacoes', $observacoes, PDO::PARAM_STR);
-        }
-        $stmt->execute();
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindValue(':nome', $nome, PDO::PARAM_STR);
+            if ($telefone === '') {
+                $stmt->bindValue(':telefone', null, PDO::PARAM_NULL);
+            } else {
+                $stmt->bindValue(':telefone', $telefone, PDO::PARAM_STR);
+            }
+            if ($observacoes === '') {
+                $stmt->bindValue(':observacoes', null, PDO::PARAM_NULL);
+            } else {
+                $stmt->bindValue(':observacoes', $observacoes, PDO::PARAM_STR);
+            }
+            $stmt->execute();
 
-        $id = (int) $stmt->fetchColumn();
-        irPara('visualizar-cliente.php?id=' . $id . '&msg=' . urlencode('Cliente cadastrado com sucesso.'));
+            $id = (int) $stmt->fetchColumn();
+            irPara('visualizar-cliente.php?id=' . $id . '&msg=' . urlencode('Cliente cadastrado com sucesso.'));
+        } catch (PDOException $erro) {
+            if (!ehViolacaoTelefoneDuplicado($erro)) {
+                throw $erro;
+            }
+
+            $clienteComMesmoTelefone = buscarClientePorTelefone($pdo, $telefone);
+            if ($clienteComMesmoTelefone !== null) {
+                $erros[] = montarMensagemTelefoneDuplicado($clienteComMesmoTelefone);
+            } else {
+                $erros[] = 'Ja existe uma cliente cadastrada com este telefone.';
+            }
+        }
     }
 }
+
+$pageTitle = 'Silvana | Cadastrar cliente';
+$basePath = '../';
+$activeSection = 'clientes';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastrar cliente</title>
-</head>
-<body>
-    <h1>Cadastrar cliente</h1>
+<?php require __DIR__ . '/../includes/head.php'; ?>
+<?php require __DIR__ . '/../includes/sidebar.php'; ?>
+<section class="page-header">
+    <div>
+        <span class="page-eyebrow">Novo cadastro</span>
+        <h1 class="page-title">Cadastrar cliente</h1>
+        <p class="page-description">Preencha os dados principais da cliente sem alterar o fluxo atual do sistema.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn--ghost" href="index.php">Voltar para clientes</a>
+    </div>
+</section>
 
-    <p><a href="index.php">Voltar para clientes</a></p>
+<?php if (!empty($erros)): ?>
+    <ul class="notice-list">
+        <?php foreach ($erros as $erro): ?>
+            <li><?= escapar($erro) ?></li>
+        <?php endforeach; ?>
+    </ul>
+<?php endif; ?>
 
-    <?php if (!empty($erros)): ?>
-        <ul>
-            <?php foreach ($erros as $erro): ?>
-                <li><?= escapar($erro) ?></li>
-            <?php endforeach; ?>
-        </ul>
-    <?php endif; ?>
+<section class="panel panel--soft">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Dados da cliente</h2>
+            <p class="section-copy">Os campos abaixo mant&ecirc;m o mesmo envio por POST j&aacute; utilizado pela aplica&ccedil;&atilde;o.</p>
+        </div>
+    </div>
 
-    <form method="post">
-        <p>
-            <label for="nome">Nome:</label><br>
+    <form method="post" class="form-grid">
+        <div class="field">
+            <label for="nome">Nome</label>
             <input type="text" name="nome" id="nome" value="<?= escapar($nome) ?>" required>
-        </p>
+        </div>
 
-        <p>
-            <label for="telefone">Telefone:</label><br>
+        <div class="field">
+            <label for="telefone">Telefone</label>
             <input type="text" name="telefone" id="telefone" value="<?= escapar($telefone) ?>">
-        </p>
+        </div>
 
-        <p>
-            <label for="observacoes">Observacoes:</label><br>
+        <div class="field field--full">
+            <label for="observacoes">Observacoes</label>
             <textarea name="observacoes" id="observacoes" rows="5" cols="50"><?= escapar($observacoes) ?></textarea>
-        </p>
+        </div>
 
-        <p>
-            <button type="submit">Salvar cliente</button>
-        </p>
+        <div class="form-actions field--full">
+            <button class="btn btn--primary" type="submit">Salvar cliente</button>
+            <a class="btn btn--secondary" href="index.php">Cancelar</a>
+        </div>
     </form>
-</body>
-</html>
+</section>
+<?php require __DIR__ . '/../includes/footer.php'; ?>
