@@ -43,3 +43,5 @@ ALTER TABLE "historico_clientes" ADD FOREIGN KEY ("servico_id") REFERENCES "serv
 CREATE UNIQUE INDEX "ux_clientes_telefone_normalizado"
   ON "clientes" ((regexp_replace("telefone", '[^0-9]', '', 'g')))
   WHERE "telefone" IS NOT NULL AND btrim("telefone") <> '';
+
+  
