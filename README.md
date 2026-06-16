@@ -10,7 +10,7 @@ O sistema será utilizado apenas pela própria profissional, substituindo anota�
 
 ## Prototipo no Figma
 
-- Link do projeto: [Sem titulo](https://www.figma.com/design/i3cWGxCxi4FK2zsetiAnjg/Sem-t%C3%ADtulo?node-id=2-2&p=f&t=ZDn52x59O7NcGR7j-0)
+- Link do projeto: [Protótipo de Média](https://www.figma.com/design/i3cWGxCxi4FK2zsetiAnjg/prototipo-sistema-salao?node-id=2-2&p=f&t=PC5uKsXVbdoyd6ko-0)
 
 ---
 
