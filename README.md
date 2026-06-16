@@ -2,9 +2,15 @@
 
 ## Sobre o Projeto
 
-O projeto consiste no desenvolvimento de um sistema simples de gerenciamento para uma terapeuta capilar/cabeleireira, com foco na organização de clientes, produtos e serviços de forma prática e fácil.
+O projeto consiste no desenvolvimento de um sistema simples de gerenciamento para uma terapeuta capilar/cabeleireira, com foco na organização de clientes, produtos e serviços de forma prática.
 
 O sistema será utilizado apenas pela própria profissional, substituindo anotações feitas manualmente em cadernos e agendas físicas.
+
+---
+
+## Prototipo no Figma
+
+- Link do projeto: [Sem titulo](https://www.figma.com/design/i3cWGxCxi4FK2zsetiAnjg/Sem-t%C3%ADtulo?node-id=2-2&p=f&t=ZDn52x59O7NcGR7j-0)
 
 ---
 
