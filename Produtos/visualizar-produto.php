@@ -1,21 +1,20 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// a mensagem vem pela url depois de cadastrar ou editar
 $id = pegarId($_GET['id'] ?? null);
-// a mensagem entra por get porque normalmente vem de cadastro ou edicao terminada
-$mensagem = trim((string) ($_GET['msg'] ?? ''));
+$mensagem = trim($_GET['msg'] ?? '');
 
 if ($id <= 0) {
-    irPara('index.php?msg=' . urlencode('Produto invalido.'));
+    irPara('index.php?msg=' . urlencode('Produto inválido.'));
 }
 
-// sem produto valido nao tem detalhe para mostrar entao volta para a lista
+// sem produto valido nao tem nada para mostrar
 $produto = buscarProduto($pdo, $id);
-if ($produto === null) {
-    irPara('index.php?msg=' . urlencode('Produto nao encontrado.'));
+if (!$produto) {
+    irPara('index.php?msg=' . urlencode('Produto não encontrado.'));
 }
 
 $pageTitle = 'Silvana | Visualizar produto';
@@ -26,9 +25,9 @@ $activeSection = 'produtos';
 <?php require __DIR__ . '/../includes/sidebar.php'; ?>
 <section class="page-header">
     <div>
-        <span class="page-eyebrow">Detalhes do produto</span>
+        <span class="page-eyebrow">Produtos</span>
         <h1 class="page-title">Visualizar produto</h1>
-        <p class="page-description">Confira os dados do produto antes de seguir para edi&ccedil;&atilde;o ou exclus&atilde;o.</p>
+        <p class="page-description">Veja os dados do produto.</p>
     </div>
     <div class="page-actions">
         <a class="btn btn--ghost" href="index.php">Voltar para produtos</a>
@@ -45,7 +44,7 @@ $activeSection = 'produtos';
     <div class="section-header">
         <div>
             <h2 class="section-title">Dados do produto</h2>
-            <p class="section-copy">Informa&ccedil;&otilde;es registradas para consulta r&aacute;pida.</p>
+            <p class="section-copy">Dados salvos.</p>
         </div>
     </div>
 
@@ -60,15 +59,15 @@ $activeSection = 'produtos';
         </article>
         <article class="detail-item">
             <span class="detail-label">Nome</span>
-            <p class="detail-value"><?= escapar((string) $produto['nome']) ?></p>
+            <p class="detail-value"><?= escapar($produto['nome']) ?></p>
         </article>
         <article class="detail-item">
             <span class="detail-label">Marca</span>
-            <p class="detail-value"><?= escapar((string) ($produto['marca'] ?? '')) ?></p>
+            <p class="detail-value"><?= escapar($produto['marca'] ?? '') ?></p>
         </article>
         <article class="detail-item detail-item--full">
-            <span class="detail-label">Descricao</span>
-            <p class="detail-value"><?= nl2br(escapar((string) ($produto['descricao'] ?? ''))) ?></p>
+            <span class="detail-label">Descri&ccedil;&atilde;o</span>
+            <p class="detail-value"><?= nl2br(escapar($produto['descricao'] ?? '')) ?></p>
         </article>
     </div>
 </section>

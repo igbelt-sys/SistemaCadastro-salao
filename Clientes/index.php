@@ -1,33 +1,26 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
-// aqui a gente pega o que veio da url para montar a busca e mostrar aviso depois de redirecionar
-$pesquisa = trim((string) ($_GET['pesquisa'] ?? ''));
-$mensagem = trim((string) ($_GET['msg'] ?? ''));
+// pega a busca e a mensagem que vieram pela url
+$pesquisa = trim($_GET['pesquisa'] ?? '');
+$mensagem = trim($_GET['msg'] ?? '');
+
+// a consulta comeca simples e so ganha filtro se a pessoa pesquisar
+$sql = 'SELECT id, nome, telefone, observacoes, criado_em FROM clientes';
+$params = [];
 
 if ($pesquisa !== '') {
-    // com texto preenchido a lista ja volta filtrada para facilitar achar a cliente
-    $stmt = $pdo->prepare(
-        'SELECT id, nome, telefone, observacoes, criado_em
-         FROM clientes
-         WHERE nome LIKE :pesquisa
-         ORDER BY nome ASC'
-    );
-    $stmt->bindValue(':pesquisa', '%' . $pesquisa . '%', PDO::PARAM_STR);
-} else {
-    // sem pesquisa a ideia e trazer tudo ja ordenado para a tela nascer completa
-    $stmt = $pdo->prepare(
-        'SELECT id, nome, telefone, observacoes, criado_em
-         FROM clientes
-         ORDER BY nome ASC'
-    );
+    $sql .= ' WHERE nome LIKE :pesquisa';
+    $params[':pesquisa'] = '%' . $pesquisa . '%';
 }
 
-// a consulta so roda depois que os parametros ficaram certinhos
-$stmt->execute();
+$sql .= ' ORDER BY nome ASC';
+
+// executa no final com ou sem filtro
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
 $clientes = $stmt->fetchAll();
 
 $pageTitle = 'Silvana | Clientes';
@@ -38,11 +31,9 @@ $activeSection = 'clientes';
 <?php require __DIR__ . '/../includes/sidebar.php'; ?>
 <section class="page-header">
     <div>
-        <span class="page-eyebrow">Gestao de clientes</span>
+        <span class="page-eyebrow">Clientes</span>
         <h1 class="page-title">Clientes</h1>
-        <p class="page-description">
-            Consulte cadastros, acompanhe observa&ccedil;&otilde;es e acesse as a&ccedil;&otilde;es principais em um ambiente visual leve e organizado.
-        </p>
+        <p class="page-description">Veja as clientes cadastradas.</p>
     </div>
     <div class="page-actions">
         <a class="btn btn--primary" href="adicionar-cliente.php">Cadastrar cliente</a>
@@ -70,7 +61,7 @@ $activeSection = 'clientes';
     <div class="section-header">
         <div>
             <h2 class="section-title">Lista de clientes</h2>
-            <p class="section-copy">Visualize os registros cadastrados e siga para visualizar, editar ou excluir.</p>
+            <p class="section-copy">Pesquise ou abra um cadastro.</p>
         </div>
         <span class="count-badge"><?= count($clientes) ?></span>
     </div>
@@ -85,19 +76,19 @@ $activeSection = 'clientes';
                         <th>ID</th>
                         <th>Nome</th>
                         <th>Telefone</th>
-                        <th>Observacoes</th>
+                        <th>Observa&ccedil;&otilde;es</th>
                         <th>Criado em</th>
-                        <th>Acoes</th>
+                        <th>A&ccedil;&otilde;es</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($clientes as $cliente): ?>
                         <tr>
                             <td><?= (int) $cliente['id'] ?></td>
-                            <td><?= escapar((string) $cliente['nome']) ?></td>
-                            <td><?= escapar((string) ($cliente['telefone'] ?? '')) ?></td>
-                            <td><?= nl2br(escapar((string) ($cliente['observacoes'] ?? ''))) ?></td>
-                            <td><?= escapar(formatarDataHora((string) $cliente['criado_em'])) ?></td>
+                            <td><?= escapar($cliente['nome']) ?></td>
+                            <td><?= escapar($cliente['telefone'] ?? '') ?></td>
+                            <td><?= nl2br(escapar($cliente['observacoes'] ?? '')) ?></td>
+                            <td><?= escapar(formatarDataHora($cliente['criado_em'])) ?></td>
                             <td>
                                 <div class="table-actions">
                                     <a class="pill-link pill-link--view" href="visualizar-cliente.php?id=<?= (int) $cliente['id'] ?>">Visualizar</a>

@@ -1,10 +1,9 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
-// isso segura os valores do formulario caso a validacao mande tentar de novo
+// segura o que a pessoa digitou se o formulario voltar com erro
 $nome = '';
 $descricao = '';
 $marca = '';
@@ -12,47 +11,40 @@ $quantidade = '0';
 $erros = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // limpa o que veio do post e ja reaproveita nas variaveis que voltam para a tela
-    $nome = trim((string) ($_POST['nome'] ?? ''));
-    $descricao = trim((string) ($_POST['descricao'] ?? ''));
-    $marca = trim((string) ($_POST['marca'] ?? ''));
-    $quantidade = trim((string) ($_POST['quantidade'] ?? '0'));
-    // aqui a quantidade precisa virar inteiro valido e sem numero negativo
+    // limpa o post antes de validar
+    $nome = trim($_POST['nome'] ?? '');
+    $descricao = trim($_POST['descricao'] ?? '');
+    $marca = trim($_POST['marca'] ?? '');
+    $quantidade = trim($_POST['quantidade'] ?? '0');
+
+    // quantidade precisa virar numero inteiro valido
     $quantidadeValidada = filter_var($quantidade, FILTER_VALIDATE_INT, [
         'options' => ['min_range' => 0],
     ]);
 
-    // produto sem nome vira confusao na lista entao barra logo de cara
     if ($nome === '') {
-        $erros[] = 'O nome do produto e obrigatorio.';
+        $erros[] = 'O nome do produto é obrigatório.';
     }
 
     if ($quantidadeValidada === false) {
-        $erros[] = 'Informe uma quantidade valida.';
+        $erros[] = 'Informe uma quantidade válida.';
     }
 
-    if (empty($erros)) {
-        // so grava quando tudo passou porque a listagem depende desses campos estarem coerentes
-        $sql = 'INSERT INTO produtos (nome, descricao, marca, quantidade)
-                VALUES (:nome, :descricao, :marca, :quantidade)
-                RETURNING id';
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(':nome', $nome, PDO::PARAM_STR);
-        if ($descricao === '') {
-            // texto opcional vazio vira null para o banco guardar ausencia de dado de forma limpa
-            $stmt->bindValue(':descricao', null, PDO::PARAM_NULL);
-        } else {
-            $stmt->bindValue(':descricao', $descricao, PDO::PARAM_STR);
-        }
-        if ($marca === '') {
-            $stmt->bindValue(':marca', null, PDO::PARAM_NULL);
-        } else {
-            $stmt->bindValue(':marca', $marca, PDO::PARAM_STR);
-        }
-        $stmt->bindValue(':quantidade', (int) $quantidadeValidada, PDO::PARAM_INT);
-        $stmt->execute();
+    // so salva quando nao sobrou erro
+    if (!$erros) {
+        $stmt = $pdo->prepare(
+            'INSERT INTO produtos (nome, descricao, marca, quantidade)
+             VALUES (:nome, :descricao, :marca, :quantidade)
+             RETURNING id'
+        );
+        // descricao e marca vazias viram null no banco
+        $stmt->execute([
+            ':nome' => $nome,
+            ':descricao' => valorOuNulo($descricao),
+            ':marca' => valorOuNulo($marca),
+            ':quantidade' => (int) $quantidadeValidada,
+        ]);
 
-        // depois do cadastro ja pula para os detalhes e evita novo envio no refresh
         $id = (int) $stmt->fetchColumn();
         irPara('visualizar-produto.php?id=' . $id . '&msg=' . urlencode('Produto cadastrado com sucesso.'));
     }
@@ -66,9 +58,9 @@ $activeSection = 'produtos';
 <?php require __DIR__ . '/../includes/sidebar.php'; ?>
 <section class="page-header">
     <div>
-        <span class="page-eyebrow">Novo cadastro</span>
+        <span class="page-eyebrow">Produtos</span>
         <h1 class="page-title">Cadastrar produto</h1>
-        <p class="page-description">Cadastre um novo produto mantendo o mesmo fluxo de valida&ccedil;&atilde;o e persist&ecirc;ncia existente.</p>
+        <p class="page-description">Preencha os campos abaixo.</p>
     </div>
     <div class="page-actions">
         <a class="btn btn--ghost" href="index.php">Voltar para produtos</a>
@@ -87,7 +79,7 @@ $activeSection = 'produtos';
     <div class="section-header">
         <div>
             <h2 class="section-title">Dados do produto</h2>
-            <p class="section-copy">Use os mesmos campos j&aacute; esperados pela regra atual da aplica&ccedil;&atilde;o.</p>
+            <p class="section-copy">Digite os dados e salve.</p>
         </div>
     </div>
 
@@ -103,7 +95,7 @@ $activeSection = 'produtos';
         </div>
 
         <div class="field field--full">
-            <label for="descricao">Descricao</label>
+            <label for="descricao">Descri&ccedil;&atilde;o</label>
             <textarea name="descricao" id="descricao" rows="5" cols="50"><?= escapar($descricao) ?></textarea>
         </div>
 

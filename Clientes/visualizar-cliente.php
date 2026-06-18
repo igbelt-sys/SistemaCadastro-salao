@@ -1,24 +1,23 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// a mensagem vem pela url depois de cadastrar editar ou adicionar historico
 $id = pegarId($_GET['id'] ?? null);
-// a mensagem chega por get para aparecer depois de cadastrar historico ou editar a cliente
-$mensagem = trim((string) ($_GET['msg'] ?? ''));
+$mensagem = trim($_GET['msg'] ?? '');
 
 if ($id <= 0) {
-    irPara('index.php?msg=' . urlencode('Cliente invalido.'));
+    irPara('index.php?msg=' . urlencode('Cliente inválido.'));
 }
 
-// essa tela depende do cadastro principal entao primeiro garante que a cliente existe
+// sem cliente valido nao tem nada para mostrar
 $cliente = buscarCliente($pdo, $id);
-if ($cliente === null) {
-    irPara('index.php?msg=' . urlencode('Cliente nao encontrado.'));
+if (!$cliente) {
+    irPara('index.php?msg=' . urlencode('Cliente não encontrado.'));
 }
 
-// aqui puxa todo o historico ligado a cliente para montar a parte de acompanhamento da tela
+// carrega o historico dessa cliente para montar a tabela
 $stmt = $pdo->prepare(
     'SELECT h.id, h.data_historico, h.observacao, s.nome AS servico_nome
      FROM historico_clientes h
@@ -26,18 +25,15 @@ $stmt = $pdo->prepare(
      WHERE h.cliente_id = :cliente_id
      ORDER BY h.data_historico DESC, h.id DESC'
 );
-$stmt->bindValue(':cliente_id', $id, PDO::PARAM_INT);
-$stmt->execute();
+$stmt->execute([':cliente_id' => $id]);
 $historicos = $stmt->fetchAll();
 
-// essa lista de servicos alimenta o select do formulario sem obrigar a sair da mesma pagina
-$stmtServicos = $pdo->prepare(
+// busca os servicos para preencher o select do formulario
+$servicos = $pdo->query(
     'SELECT id, nome, valor_base
      FROM servicos
      ORDER BY nome ASC'
-);
-$stmtServicos->execute();
-$servicos = $stmtServicos->fetchAll();
+)->fetchAll();
 
 $pageTitle = 'Silvana | Visualizar cliente';
 $basePath = '../';
@@ -47,9 +43,9 @@ $activeSection = 'clientes';
 <?php require __DIR__ . '/../includes/sidebar.php'; ?>
 <section class="page-header">
     <div>
-        <span class="page-eyebrow">Perfil da cliente</span>
+        <span class="page-eyebrow">Clientes</span>
         <h1 class="page-title">Visualizar cliente</h1>
-        <p class="page-description">Consulte os dados principais e registre o hist&oacute;rico de atendimentos na mesma tela.</p>
+        <p class="page-description">Veja os dados e o hist&oacute;rico.</p>
     </div>
     <div class="page-actions">
         <a class="btn btn--ghost" href="index.php">Voltar para clientes</a>
@@ -66,7 +62,7 @@ $activeSection = 'clientes';
     <div class="section-header">
         <div>
             <h2 class="section-title">Dados da cliente</h2>
-            <p class="section-copy">Informa&ccedil;&otilde;es principais do cadastro armazenado no sistema.</p>
+            <p class="section-copy">Dados salvos.</p>
         </div>
     </div>
 
@@ -77,19 +73,19 @@ $activeSection = 'clientes';
         </article>
         <article class="detail-item">
             <span class="detail-label">Criado em</span>
-            <p class="detail-value"><?= escapar(formatarDataHora((string) $cliente['criado_em'])) ?></p>
+            <p class="detail-value"><?= escapar(formatarDataHora($cliente['criado_em'])) ?></p>
         </article>
         <article class="detail-item">
             <span class="detail-label">Nome</span>
-            <p class="detail-value"><?= escapar((string) $cliente['nome']) ?></p>
+            <p class="detail-value"><?= escapar($cliente['nome']) ?></p>
         </article>
         <article class="detail-item">
             <span class="detail-label">Telefone</span>
-            <p class="detail-value"><?= escapar((string) ($cliente['telefone'] ?? '')) ?></p>
+            <p class="detail-value"><?= escapar($cliente['telefone'] ?? '') ?></p>
         </article>
         <article class="detail-item detail-item--full">
-            <span class="detail-label">Observacoes</span>
-            <p class="detail-value"><?= nl2br(escapar((string) ($cliente['observacoes'] ?? ''))) ?></p>
+            <span class="detail-label">Observa&ccedil;&otilde;es</span>
+            <p class="detail-value"><?= nl2br(escapar($cliente['observacoes'] ?? '')) ?></p>
         </article>
     </div>
 </section>
@@ -98,8 +94,8 @@ $activeSection = 'clientes';
     <article class="panel panel--soft">
         <div class="section-header">
             <div>
-                <h2 class="section-title">Adicionar historico</h2>
-                <p class="section-copy">Registre manualmente a evolu&ccedil;&atilde;o de cada atendimento.</p>
+                <h2 class="section-title">Adicionar hist&oacute;rico</h2>
+                <p class="section-copy">Preencha e salve.</p>
             </div>
         </div>
 
@@ -112,28 +108,28 @@ $activeSection = 'clientes';
             </div>
 
             <div class="field field--full">
-                <label for="servico_id">Servico</label>
+                <label for="servico_id">Servi&ccedil;o</label>
                 <select name="servico_id" id="servico_id">
-                    <option value="">Sem servico vinculado</option>
+                    <option value="">Sem servi&ccedil;o vinculado</option>
                     <?php foreach ($servicos as $servico): ?>
                         <option value="<?= (int) $servico['id'] ?>">
-                            <?= escapar((string) $servico['nome']) ?>
+                            <?= escapar($servico['nome']) ?>
                             - R$ <?= number_format((float) $servico['valor_base'], 2, ',', '.') ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
                 <?php if (empty($servicos)): ?>
-                    <p class="section-copy">Nenhum servico cadastrado ainda.</p>
+                    <p class="section-copy">Cadastre um servi&ccedil;o primeiro.</p>
                 <?php endif; ?>
             </div>
 
             <div class="field field--full">
-                <label for="observacao">Observacao</label>
+                <label for="observacao">Observa&ccedil;&atilde;o</label>
                 <textarea name="observacao" id="observacao" rows="5" cols="50" required></textarea>
             </div>
 
             <div class="form-actions field--full">
-                <button class="btn btn--primary" type="submit">Adicionar historico</button>
+                <button class="btn btn--primary" type="submit">Adicionar hist&oacute;rico</button>
             </div>
         </form>
     </article>
@@ -141,14 +137,14 @@ $activeSection = 'clientes';
     <article class="panel">
         <div class="section-header">
             <div>
-                <h2 class="section-title">Historico</h2>
-                <p class="section-copy">Atendimentos e observa&ccedil;&otilde;es vinculados a esta cliente.</p>
+                <h2 class="section-title">Hist&oacute;rico</h2>
+                <p class="section-copy">Hist&oacute;rico da cliente.</p>
             </div>
             <span class="count-badge"><?= count($historicos) ?></span>
         </div>
 
         <?php if (empty($historicos)): ?>
-            <div class="empty-state">Nenhum historico cadastrado para esta cliente.</div>
+            <div class="empty-state">Nenhum hist&oacute;rico cadastrado para esta cliente.</div>
         <?php else: ?>
             <div class="table-wrap">
                 <table class="data-table">
@@ -156,17 +152,17 @@ $activeSection = 'clientes';
                         <tr>
                             <th>ID</th>
                             <th>Data</th>
-                            <th>Servico</th>
-                            <th>Observacao</th>
+                            <th>Servi&ccedil;o</th>
+                            <th>Observa&ccedil;&atilde;o</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($historicos as $historico): ?>
                             <tr>
                                 <td><?= (int) $historico['id'] ?></td>
-                                <td><?= escapar((string) $historico['data_historico']) ?></td>
-                                <td><?= escapar((string) ($historico['servico_nome'] ?? 'Sem servico vinculado')) ?></td>
-                                <td><?= nl2br(escapar((string) $historico['observacao'])) ?></td>
+                                <td><?= escapar($historico['data_historico']) ?></td>
+                                <td><?= escapar($historico['servico_nome'] ?? 'Sem serviço vinculado') ?></td>
+                                <td><?= nl2br(escapar($historico['observacao'])) ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

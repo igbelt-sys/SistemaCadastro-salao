@@ -1,33 +1,26 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
-// esses dois caras chegam da url e controlam a busca e o aviso no topo da tela
-$pesquisa = trim((string) ($_GET['pesquisa'] ?? ''));
-$mensagem = trim((string) ($_GET['msg'] ?? ''));
+// pega a busca e a mensagem que vieram pela url
+$pesquisa = trim($_GET['pesquisa'] ?? '');
+$mensagem = trim($_GET['msg'] ?? '');
+
+// a consulta comeca simples e so ganha filtro se a pessoa pesquisar
+$sql = 'SELECT id, nome, descricao, marca, quantidade FROM produtos';
+$params = [];
 
 if ($pesquisa !== '') {
-    // quando tem texto a consulta procura por nome ou marca para achar produto mais rapido
-    $stmt = $pdo->prepare(
-        'SELECT id, nome, descricao, marca, quantidade
-         FROM produtos
-         WHERE nome LIKE :pesquisa OR marca LIKE :pesquisa
-         ORDER BY nome ASC'
-    );
-    $stmt->bindValue(':pesquisa', '%' . $pesquisa . '%', PDO::PARAM_STR);
-} else {
-    // sem filtro a tela mostra o catalogo inteiro ordenado pelo nome
-    $stmt = $pdo->prepare(
-        'SELECT id, nome, descricao, marca, quantidade
-         FROM produtos
-         ORDER BY nome ASC'
-    );
+    $sql .= ' WHERE nome LIKE :pesquisa OR marca LIKE :pesquisa';
+    $params[':pesquisa'] = '%' . $pesquisa . '%';
 }
 
-// so executa depois de montar a consulta certa para cada caso
-$stmt->execute();
+$sql .= ' ORDER BY nome ASC';
+
+// executa no final com ou sem filtro
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
 $produtos = $stmt->fetchAll();
 
 $pageTitle = 'Silvana | Produtos';
@@ -38,9 +31,9 @@ $activeSection = 'produtos';
 <?php require __DIR__ . '/../includes/sidebar.php'; ?>
 <section class="page-header">
     <div>
-        <span class="page-eyebrow">Gestao de produtos</span>
+        <span class="page-eyebrow">Produtos</span>
         <h1 class="page-title">Produtos</h1>
-        <p class="page-description">Organize os produtos utilizados nos atendimentos com uma listagem clara, elegante e funcional.</p>
+        <p class="page-description">Veja os produtos cadastrados.</p>
     </div>
     <div class="page-actions">
         <a class="btn btn--primary" href="adicionar-produto.php">Cadastrar produto</a>
@@ -68,7 +61,7 @@ $activeSection = 'produtos';
     <div class="section-header">
         <div>
             <h2 class="section-title">Lista de produtos</h2>
-            <p class="section-copy">Acompanhe os produtos cadastrados e siga para visualizar, editar ou excluir.</p>
+            <p class="section-copy">Pesquise ou abra um produto.</p>
         </div>
         <span class="count-badge"><?= count($produtos) ?></span>
     </div>
@@ -84,15 +77,15 @@ $activeSection = 'produtos';
                         <th>Nome</th>
                         <th>Marca</th>
                         <th>Quantidade</th>
-                        <th>Acoes</th>
+                        <th>A&ccedil;&otilde;es</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($produtos as $produto): ?>
                         <tr>
                             <td><?= (int) $produto['id'] ?></td>
-                            <td><?= escapar((string) $produto['nome']) ?></td>
-                            <td><?= escapar((string) ($produto['marca'] ?? '')) ?></td>
+                            <td><?= escapar($produto['nome']) ?></td>
+                            <td><?= escapar($produto['marca'] ?? '') ?></td>
                             <td><?= (int) ($produto['quantidade'] ?? 0) ?></td>
                             <td>
                                 <div class="table-actions">

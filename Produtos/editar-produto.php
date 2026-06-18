@@ -1,70 +1,63 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
-// o id chega por get quando abre a tela e por post quando salva a alteracao
+// o id pode vir da url ao abrir a tela ou do post ao salvar
 $id = pegarId($_GET['id'] ?? $_POST['id'] ?? null);
 $erros = [];
 
 if ($id <= 0) {
-    irPara('index.php?msg=' . urlencode('Produto invalido.'));
+    irPara('index.php?msg=' . urlencode('Produto inválido.'));
 }
 
-// primeiro puxa o registro atual para preencher a tela e validar se ele existe
+// carrega o produto atual para preencher o formulario
 $produto = buscarProduto($pdo, $id);
-if ($produto === null) {
-    irPara('index.php?msg=' . urlencode('Produto nao encontrado.'));
+if (!$produto) {
+    irPara('index.php?msg=' . urlencode('Produto não encontrado.'));
 }
 
-$nome = (string) $produto['nome'];
-$descricao = (string) ($produto['descricao'] ?? '');
-$marca = (string) ($produto['marca'] ?? '');
+$nome = $produto['nome'];
+$descricao = $produto['descricao'] ?? '';
+$marca = $produto['marca'] ?? '';
 $quantidade = (string) ($produto['quantidade'] ?? '0');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // se a pessoa enviou o formulario esses valores passam a ser a nova verdade da tentativa
-    $nome = trim((string) ($_POST['nome'] ?? ''));
-    $descricao = trim((string) ($_POST['descricao'] ?? ''));
-    $marca = trim((string) ($_POST['marca'] ?? ''));
-    $quantidade = trim((string) ($_POST['quantidade'] ?? '0'));
-    // aqui a quantidade continua presa a inteiro valido para o estoque nao ficar torto
+    // quando envia o formulario a nova tentativa passa a valer aqui
+    $nome = trim($_POST['nome'] ?? '');
+    $descricao = trim($_POST['descricao'] ?? '');
+    $marca = trim($_POST['marca'] ?? '');
+    $quantidade = trim($_POST['quantidade'] ?? '0');
+
+    // quantidade precisa continuar inteira para nao baguncar o estoque
     $quantidadeValidada = filter_var($quantidade, FILTER_VALIDATE_INT, [
         'options' => ['min_range' => 0],
     ]);
 
     if ($nome === '') {
-        $erros[] = 'O nome do produto e obrigatorio.';
+        $erros[] = 'O nome do produto é obrigatório.';
     }
 
     if ($quantidadeValidada === false) {
-        $erros[] = 'Informe uma quantidade valida.';
+        $erros[] = 'Informe uma quantidade válida.';
     }
 
-    if (empty($erros)) {
-        // a atualizacao so acontece depois da validacao porque ela mexe direto no registro existente
-        $sql = 'UPDATE produtos
-                SET nome = :nome, descricao = :descricao, marca = :marca, quantidade = :quantidade
-                WHERE id = :id';
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(':nome', $nome, PDO::PARAM_STR);
-        if ($descricao === '') {
-            // manter null aqui evita salvar string vazia quando a descricao for apagada
-            $stmt->bindValue(':descricao', null, PDO::PARAM_NULL);
-        } else {
-            $stmt->bindValue(':descricao', $descricao, PDO::PARAM_STR);
-        }
-        if ($marca === '') {
-            $stmt->bindValue(':marca', null, PDO::PARAM_NULL);
-        } else {
-            $stmt->bindValue(':marca', $marca, PDO::PARAM_STR);
-        }
-        $stmt->bindValue(':quantidade', (int) $quantidadeValidada, PDO::PARAM_INT);
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
+    // com tudo certo atualiza o mesmo registro
+    if (!$erros) {
+        $stmt = $pdo->prepare(
+            'UPDATE produtos
+             SET nome = :nome, descricao = :descricao, marca = :marca, quantidade = :quantidade
+             WHERE id = :id'
+        );
+        // descricao e marca vazias viram null no banco
+        $stmt->execute([
+            ':nome' => $nome,
+            ':descricao' => valorOuNulo($descricao),
+            ':marca' => valorOuNulo($marca),
+            ':quantidade' => (int) $quantidadeValidada,
+            ':id' => $id,
+        ]);
 
-        // no fim volta para os detalhes porque e o lugar mais natural para conferir a mudanca
         irPara('visualizar-produto.php?id=' . $id . '&msg=' . urlencode('Produto atualizado com sucesso.'));
     }
 }
@@ -77,9 +70,9 @@ $activeSection = 'produtos';
 <?php require __DIR__ . '/../includes/sidebar.php'; ?>
 <section class="page-header">
     <div>
-        <span class="page-eyebrow">Atualizacao de cadastro</span>
+        <span class="page-eyebrow">Produtos</span>
         <h1 class="page-title">Editar produto</h1>
-        <p class="page-description">Ajuste os dados do produto preservando os mesmos campos enviados por POST e o redirecionamento atual.</p>
+        <p class="page-description">Altere os dados abaixo.</p>
     </div>
     <div class="page-actions">
         <a class="btn btn--ghost" href="index.php">Voltar para produtos</a>
@@ -99,7 +92,7 @@ $activeSection = 'produtos';
     <div class="section-header">
         <div>
             <h2 class="section-title">Dados para edi&ccedil;&atilde;o</h2>
-            <p class="section-copy">Os valores atuais permanecem preenchidos para facilitar a atualiza&ccedil;&atilde;o do registro.</p>
+            <p class="section-copy">Edite e salve.</p>
         </div>
     </div>
 
@@ -117,7 +110,7 @@ $activeSection = 'produtos';
         </div>
 
         <div class="field field--full">
-            <label for="descricao">Descricao</label>
+            <label for="descricao">Descri&ccedil;&atilde;o</label>
             <textarea name="descricao" id="descricao" rows="5" cols="50"><?= escapar($descricao) ?></textarea>
         </div>
 

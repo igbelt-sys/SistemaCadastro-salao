@@ -1,56 +1,51 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
-// essas variaveis guardam a ultima tentativa do formulario caso apareca erro
+// segura o que a pessoa digitou se o formulario voltar com erro
 $nome = '';
 $descricao = '';
 $valorBase = '';
 $erros = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // limpa os campos do post e ja normaliza o valor para aceitar virgula ou ponto
-    $nome = trim((string) ($_POST['nome'] ?? ''));
-    $descricao = trim((string) ($_POST['descricao'] ?? ''));
-    $valorBase = normalizarValor((string) ($_POST['valor_base'] ?? ''));
-    // aqui o valor precisa realmente virar numero para seguir para o banco
+    // limpa o post antes de validar
+    $nome = trim($_POST['nome'] ?? '');
+    $descricao = trim($_POST['descricao'] ?? '');
+    $valorBase = normalizarValor($_POST['valor_base'] ?? '');
+
+    // tenta transformar o valor digitado em numero de verdade
     $valorValidado = filter_var($valorBase, FILTER_VALIDATE_FLOAT);
 
-    // nome e o minimo para a lista de servicos fazer sentido
     if ($nome === '') {
-        $erros[] = 'O nome do servico e obrigatorio.';
+        $erros[] = 'O nome do serviço é obrigatório.';
     }
 
     if ($valorValidado === false || $valorValidado < 0) {
-        $erros[] = 'Informe um valor base valido.';
+        $erros[] = 'Informe um valor base válido.';
     }
 
-    if (empty($erros)) {
-        // so insere quando nome e valor passaram para nao nascer servico quebrado
-        $sql = 'INSERT INTO servicos (nome, descricao, valor_base)
-                VALUES (:nome, :descricao, :valor_base)
-                RETURNING id';
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(':nome', $nome, PDO::PARAM_STR);
-        if ($descricao === '') {
-            // descricao opcional vazia vai como null e deixa o banco mais limpo
-            $stmt->bindValue(':descricao', null, PDO::PARAM_NULL);
-        } else {
-            $stmt->bindValue(':descricao', $descricao, PDO::PARAM_STR);
-        }
-        // formatar com duas casas evita salvar valor com formato baguncado
-        $stmt->bindValue(':valor_base', number_format((float) $valorValidado, 2, '.', ''), PDO::PARAM_STR);
-        $stmt->execute();
+    // so salva quando nao sobrou erro
+    if (!$erros) {
+        $stmt = $pdo->prepare(
+            'INSERT INTO servicos (nome, descricao, valor_base)
+             VALUES (:nome, :descricao, :valor_base)
+             RETURNING id'
+        );
+        // descricao vazia vira null e o valor vai formatado certinho para o banco
+        $stmt->execute([
+            ':nome' => $nome,
+            ':descricao' => valorOuNulo($descricao),
+            ':valor_base' => number_format((float) $valorValidado, 2, '.', ''),
+        ]);
 
-        // depois do insert cai nos detalhes e evita envio repetido ao atualizar a pagina
         $id = (int) $stmt->fetchColumn();
-        irPara('visualizar-servico.php?id=' . $id . '&msg=' . urlencode('Servico cadastrado com sucesso.'));
+        irPara('visualizar-servico.php?id=' . $id . '&msg=' . urlencode('Serviço cadastrado com sucesso.'));
     }
 }
 
-$pageTitle = 'Silvana | Cadastrar servico';
+$pageTitle = 'Silvana | Cadastrar serviço';
 $basePath = '../';
 $activeSection = 'servicos';
 ?>
@@ -58,12 +53,12 @@ $activeSection = 'servicos';
 <?php require __DIR__ . '/../includes/sidebar.php'; ?>
 <section class="page-header">
     <div>
-        <span class="page-eyebrow">Novo cadastro</span>
-        <h1 class="page-title">Cadastrar servico</h1>
-        <p class="page-description">Cadastre um novo servi&ccedil;o seguindo o mesmo fluxo de valida&ccedil;&atilde;o do sistema.</p>
+        <span class="page-eyebrow">Servi&ccedil;os</span>
+        <h1 class="page-title">Cadastrar servi&ccedil;o</h1>
+        <p class="page-description">Preencha os campos abaixo.</p>
     </div>
     <div class="page-actions">
-        <a class="btn btn--ghost" href="index.php">Voltar para servicos</a>
+        <a class="btn btn--ghost" href="index.php">Voltar para servi&ccedil;os</a>
     </div>
 </section>
 
@@ -78,8 +73,8 @@ $activeSection = 'servicos';
 <section class="panel panel--soft">
     <div class="section-header">
         <div>
-            <h2 class="section-title">Dados do servico</h2>
-            <p class="section-copy">Os campos abaixo mant&ecirc;m o mesmo envio esperado pelas regras atuais.</p>
+            <h2 class="section-title">Dados do servi&ccedil;o</h2>
+            <p class="section-copy">Digite os dados e salve.</p>
         </div>
     </div>
 
@@ -95,12 +90,12 @@ $activeSection = 'servicos';
         </div>
 
         <div class="field field--full">
-            <label for="descricao">Descricao</label>
+            <label for="descricao">Descri&ccedil;&atilde;o</label>
             <textarea name="descricao" id="descricao" rows="5" cols="50"><?= escapar($descricao) ?></textarea>
         </div>
 
         <div class="form-actions field--full">
-            <button class="btn btn--primary" type="submit">Salvar servico</button>
+            <button class="btn btn--primary" type="submit">Salvar servi&ccedil;o</button>
             <a class="btn btn--secondary" href="index.php">Cancelar</a>
         </div>
     </form>

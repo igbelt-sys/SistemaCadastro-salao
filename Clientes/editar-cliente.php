@@ -1,83 +1,73 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
-// o id pode vir por get ao abrir a tela ou por post ao salvar a edicao
+// o id pode vir da url ao abrir a tela ou do post ao salvar
 $id = pegarId($_GET['id'] ?? $_POST['id'] ?? null);
 $erros = [];
 
 if ($id <= 0) {
-    // se o id vier torto nem segue porque todo o resto depende dele
-    irPara('index.php?msg=' . urlencode('Cliente invalido.'));
+    irPara('index.php?msg=' . urlencode('Cliente inválido.'));
 }
 
-// carrega o cadastro uma vez so e reaproveita os dados para preencher a tela
+// carrega o cadastro atual para preencher o formulario
 $cliente = buscarCliente($pdo, $id);
-if ($cliente === null) {
-    irPara('index.php?msg=' . urlencode('Cliente nao encontrado.'));
+if (!$cliente) {
+    irPara('index.php?msg=' . urlencode('Cliente não encontrado.'));
 }
 
-$nome = (string) $cliente['nome'];
-$telefone = (string) ($cliente['telefone'] ?? '');
-$observacoes = (string) ($cliente['observacoes'] ?? '');
+$nome = $cliente['nome'];
+$telefone = $cliente['telefone'] ?? '';
+$observacoes = $cliente['observacoes'] ?? '';
 $telefoneOriginal = $telefone;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // quando envia o formulario a gente substitui os dados antigos pela nova tentativa
-    $nome = trim((string) ($_POST['nome'] ?? ''));
-    $telefone = trim((string) ($_POST['telefone'] ?? ''));
-    $observacoes = trim((string) ($_POST['observacoes'] ?? ''));
+    // quando envia o formulario a nova tentativa passa a valer aqui
+    $nome = trim($_POST['nome'] ?? '');
+    $telefone = trim($_POST['telefone'] ?? '');
+    $observacoes = trim($_POST['observacoes'] ?? '');
 
     if ($nome === '') {
-        $erros[] = 'O nome da cliente e obrigatorio.';
+        $erros[] = 'O nome da cliente é obrigatório.';
     }
 
-    // so investiga duplicidade se o telefone mudou de verdade para nao gastar consulta a toa
+    // so checa duplicidade se o telefone realmente mudou
     if (normalizarTelefone($telefone) !== normalizarTelefone($telefoneOriginal)) {
         $clienteComMesmoTelefone = buscarClientePorTelefone($pdo, $telefone, $id);
-        if ($clienteComMesmoTelefone !== null) {
+
+        if ($clienteComMesmoTelefone) {
             $erros[] = montarMensagemTelefoneDuplicado($clienteComMesmoTelefone);
         }
     }
 
-    if (empty($erros)) {
-        // com tudo validado a atualizacao acontece mantendo o mesmo registro
-        $sql = 'UPDATE clientes
-                SET nome = :nome, telefone = :telefone, observacoes = :observacoes
-                WHERE id = :id';
+    // com tudo certo atualiza o mesmo registro
+    if (!$erros) {
         try {
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindValue(':nome', $nome, PDO::PARAM_STR);
-            if ($telefone === '') {
-                // se apagou o telefone a gente grava null e nao uma string vazia
-                $stmt->bindValue(':telefone', null, PDO::PARAM_NULL);
-            } else {
-                $stmt->bindValue(':telefone', $telefone, PDO::PARAM_STR);
-            }
-            if ($observacoes === '') {
-                $stmt->bindValue(':observacoes', null, PDO::PARAM_NULL);
-            } else {
-                $stmt->bindValue(':observacoes', $observacoes, PDO::PARAM_STR);
-            }
-            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-            $stmt->execute();
+            $stmt = $pdo->prepare(
+                'UPDATE clientes
+                 SET nome = :nome, telefone = :telefone, observacoes = :observacoes
+                 WHERE id = :id'
+            );
+            // campo vazio vira null para o banco nao guardar string vazia
+            $stmt->execute([
+                ':nome' => $nome,
+                ':telefone' => valorOuNulo($telefone),
+                ':observacoes' => valorOuNulo($observacoes),
+                ':id' => $id,
+            ]);
 
-            // depois da edicao volta para os detalhes porque ali ja da para conferir o resultado
             irPara('visualizar-cliente.php?id=' . $id . '&msg=' . urlencode('Cliente atualizado com sucesso.'));
         } catch (PDOException $erro) {
-            // aqui repete a defesa do banco caso a duplicidade so apareca no momento do save
+            // se o banco barrar duplicidade a gente mostra a mensagem certa
             if (!ehViolacaoTelefoneDuplicado($erro)) {
                 throw $erro;
             }
 
             $clienteComMesmoTelefone = buscarClientePorTelefone($pdo, $telefone, $id);
-            if ($clienteComMesmoTelefone !== null) {
-                $erros[] = montarMensagemTelefoneDuplicado($clienteComMesmoTelefone);
-            } else {
-                $erros[] = 'Ja existe uma cliente cadastrada com este telefone.';
-            }
+            $erros[] = $clienteComMesmoTelefone
+                ? montarMensagemTelefoneDuplicado($clienteComMesmoTelefone)
+                : 'Já existe uma cliente cadastrada com este telefone.';
         }
     }
 }
@@ -90,9 +80,9 @@ $activeSection = 'clientes';
 <?php require __DIR__ . '/../includes/sidebar.php'; ?>
 <section class="page-header">
     <div>
-        <span class="page-eyebrow">Atualizacao de cadastro</span>
+        <span class="page-eyebrow">Clientes</span>
         <h1 class="page-title">Editar cliente</h1>
-        <p class="page-description">Ajuste os dados da cliente mantendo os mesmos campos e o mesmo processamento do sistema.</p>
+        <p class="page-description">Altere os dados abaixo.</p>
     </div>
     <div class="page-actions">
         <a class="btn btn--ghost" href="index.php">Voltar para clientes</a>
@@ -112,7 +102,7 @@ $activeSection = 'clientes';
     <div class="section-header">
         <div>
             <h2 class="section-title">Dados para edi&ccedil;&atilde;o</h2>
-            <p class="section-copy">Os valores j&aacute; carregados continuam sendo exibidos com seguran&ccedil;a usando a fun&ccedil;&atilde;o de escape existente.</p>
+            <p class="section-copy">Edite e salve.</p>
         </div>
     </div>
 
@@ -130,7 +120,7 @@ $activeSection = 'clientes';
         </div>
 
         <div class="field field--full">
-            <label for="observacoes">Observacoes</label>
+            <label for="observacoes">Observa&ccedil;&otilde;es</label>
             <textarea name="observacoes" id="observacoes" rows="5" cols="50"><?= escapar($observacoes) ?></textarea>
         </div>
 

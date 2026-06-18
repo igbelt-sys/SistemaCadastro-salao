@@ -2,7 +2,6 @@
 $basePath = $basePath ?? '';
 $activeSection = $activeSection ?? '';
 
-// esse mapa concentra os icones num lugar so para a sidebar nao virar repeticao espalhada
 $renderSidebarIcon = static function (string $icon): string {
     $icons = [
         'inicio' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path><path d="M9 21v-6h6v6"></path></svg>',
@@ -21,7 +20,7 @@ $renderSidebarIcon = static function (string $icon): string {
             <img
                 class="brand-logo"
                 src="<?= htmlspecialchars($basePath . 'assets/imagens/logosalao-cortada.png', ENT_QUOTES, 'UTF-8') ?>"
-                alt="Silvana Terapia e Estetica Capilar"
+                alt="Silvana Terapia e Estética Capilar"
             >
         </div>
 
@@ -30,7 +29,6 @@ $renderSidebarIcon = static function (string $icon): string {
         <nav class="sidebar-nav" aria-label="Menu principal">
             <ul>
                 <li>
-                    <?php // a classe ativa deixa claro no menu onde a pessoa esta agora ?>
                     <a class="<?= $activeSection === 'inicio' ? 'is-active' : '' ?>" href="<?= htmlspecialchars($basePath . 'index.php', ENT_QUOTES, 'UTF-8') ?>">
                         <span class="nav-icon"><?= $renderSidebarIcon('inicio') ?></span>
                         <span>In&iacute;cio</span>

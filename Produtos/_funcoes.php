@@ -1,44 +1,46 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/../config/conexao.php';
 
 function escapar(string $texto): string
 {
-    // limpa o texto antes de renderizar e segura html vindo de fora
+    // limpa o texto antes de mandar para a tela
     return htmlspecialchars($texto, ENT_QUOTES, 'UTF-8');
 }
 
 function pegarId($valor): int
 {
-    // aqui entra so id inteiro valido porque o resto nao serve para consultar banco
+    // so aceita id inteiro maior que zero
     $id = filter_var($valor, FILTER_VALIDATE_INT, [
         'options' => ['min_range' => 1],
     ]);
 
-    return $id === false ? 0 : (int) $id;
+    return $id ? (int) $id : 0;
+}
+
+function valorOuNulo(string $valor): ?string
+{
+    // quando vier vazio salva como null no banco
+    return $valor === '' ? null : $valor;
 }
 
 function buscarProduto(PDO $pdo, int $id): ?array
 {
-    // deixa a busca do produto pronta num lugar so e evita copia e cola de consulta
-    $sql = 'SELECT id, nome, descricao, marca, quantidade
-            FROM produtos
-            WHERE id = :id
-            LIMIT 1';
+    // deixa a busca pronta num lugar so para as telas reaproveitarem
+    $stmt = $pdo->prepare(
+        'SELECT id, nome, descricao, marca, quantidade
+         FROM produtos
+         WHERE id = :id
+         LIMIT 1'
+    );
+    $stmt->execute([':id' => $id]);
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-    $stmt->execute();
-
-    $produto = $stmt->fetch();
-
-    return $produto ?: null;
+    return $stmt->fetch() ?: null;
 }
 
 function irPara(string $url): void
 {
-    // redireciona e para a pagina logo em seguida para o fluxo ficar certinho
+    // centraliza o redirecionamento e corta o resto da execucao
     header('Location: ' . $url);
     exit;
 }

@@ -1,32 +1,30 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
-// esse id atende a confirmacao e o delete final no envio do formulario
+// o id vem por get para abrir a tela e por post para confirmar
 $id = pegarId($_GET['id'] ?? $_POST['id'] ?? null);
 
 if ($id <= 0) {
-    irPara('index.php?msg=' . urlencode('Servico invalido.'));
+    irPara('index.php?msg=' . urlencode('Serviço inválido.'));
 }
 
-// confirmar existencia antes do delete evita operar em registro que ja sumiu
+// confirma se o servico ainda existe antes de mostrar ou excluir
 $servico = buscarServico($pdo, $id);
-if ($servico === null) {
-    irPara('index.php?msg=' . urlencode('Servico nao encontrado.'));
+if (!$servico) {
+    irPara('index.php?msg=' . urlencode('Serviço não encontrado.'));
 }
 
+// a exclusao so roda no post para nao apagar por engano
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // delete so no post para nao correr risco de exclusao por clique perdido
     $stmt = $pdo->prepare('DELETE FROM servicos WHERE id = :id');
-    $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-    $stmt->execute();
+    $stmt->execute([':id' => $id]);
 
-    irPara('index.php?msg=' . urlencode('Servico excluido com sucesso.'));
+    irPara('index.php?msg=' . urlencode('Serviço excluído com sucesso.'));
 }
 
-$pageTitle = 'Silvana | Excluir servico';
+$pageTitle = 'Silvana | Excluir serviço';
 $basePath = '../';
 $activeSection = 'servicos';
 ?>
@@ -34,12 +32,12 @@ $activeSection = 'servicos';
 <?php require __DIR__ . '/../includes/sidebar.php'; ?>
 <section class="page-header">
     <div>
-        <span class="page-eyebrow">Acao sensivel</span>
-        <h1 class="page-title">Excluir servico</h1>
-        <p class="page-description">Revise a opera&ccedil;&atilde;o antes de remover este servi&ccedil;o do sistema.</p>
+        <span class="page-eyebrow">Servi&ccedil;os</span>
+        <h1 class="page-title">Excluir servi&ccedil;o</h1>
+        <p class="page-description">Confirme se quer excluir.</p>
     </div>
     <div class="page-actions">
-        <a class="btn btn--ghost" href="index.php">Voltar para servicos</a>
+        <a class="btn btn--ghost" href="index.php">Voltar para servi&ccedil;os</a>
         <a class="btn btn--secondary" href="visualizar-servico.php?id=<?= $id ?>">Cancelar</a>
     </div>
 </section>
@@ -53,13 +51,13 @@ $activeSection = 'servicos';
                 <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.72 3h16.92a2 2 0 0 0 1.72-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
             </svg>
         </div>
-        <h2 class="confirm-title">Confirmar exclusao</h2>
-        <p class="confirm-copy">Tem certeza que deseja excluir este servico? O fluxo de POST e exclus&atilde;o foi mantido.</p>
-        <p class="confirm-target"><?= escapar((string) $servico['nome']) ?></p>
+        <h2 class="confirm-title">Confirmar exclus&atilde;o</h2>
+        <p class="confirm-copy">Este servi&ccedil;o ser&aacute; removido.</p>
+        <p class="confirm-target"><?= escapar($servico['nome']) ?></p>
 
         <form method="post" class="form-actions confirm-actions">
             <input type="hidden" name="id" value="<?= $id ?>">
-            <button class="btn btn--danger" type="submit">Confirmar exclusao</button>
+            <button class="btn btn--danger" type="submit">Confirmar exclus&atilde;o</button>
             <a class="btn btn--secondary" href="visualizar-servico.php?id=<?= $id ?>">Cancelar</a>
         </form>
     </article>

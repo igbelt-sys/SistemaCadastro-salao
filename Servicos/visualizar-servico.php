@@ -1,24 +1,23 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// a mensagem vem pela url depois de cadastrar ou editar
 $id = pegarId($_GET['id'] ?? null);
-// essa mensagem costuma vir das telas que mandam de volta para os detalhes
-$mensagem = trim((string) ($_GET['msg'] ?? ''));
+$mensagem = trim($_GET['msg'] ?? '');
 
 if ($id <= 0) {
-    irPara('index.php?msg=' . urlencode('Servico invalido.'));
+    irPara('index.php?msg=' . urlencode('Serviço inválido.'));
 }
 
-// se nao achar o servico nao compensa seguir montando a pagina
+// sem servico valido nao tem nada para mostrar
 $servico = buscarServico($pdo, $id);
-if ($servico === null) {
-    irPara('index.php?msg=' . urlencode('Servico nao encontrado.'));
+if (!$servico) {
+    irPara('index.php?msg=' . urlencode('Serviço não encontrado.'));
 }
 
-$pageTitle = 'Silvana | Visualizar servico';
+$pageTitle = 'Silvana | Visualizar serviço';
 $basePath = '../';
 $activeSection = 'servicos';
 ?>
@@ -26,12 +25,12 @@ $activeSection = 'servicos';
 <?php require __DIR__ . '/../includes/sidebar.php'; ?>
 <section class="page-header">
     <div>
-        <span class="page-eyebrow">Detalhes do servico</span>
-        <h1 class="page-title">Visualizar servico</h1>
-        <p class="page-description">Confira os dados do servi&ccedil;o antes de seguir para edi&ccedil;&atilde;o ou exclus&atilde;o.</p>
+        <span class="page-eyebrow">Servi&ccedil;os</span>
+        <h1 class="page-title">Visualizar servi&ccedil;o</h1>
+        <p class="page-description">Veja os dados do servi&ccedil;o.</p>
     </div>
     <div class="page-actions">
-        <a class="btn btn--ghost" href="index.php">Voltar para servicos</a>
+        <a class="btn btn--ghost" href="index.php">Voltar para servi&ccedil;os</a>
         <a class="btn btn--secondary" href="editar-servico.php?id=<?= $id ?>">Editar</a>
         <a class="btn btn--danger" href="excluir-servico.php?id=<?= $id ?>">Excluir</a>
     </div>
@@ -44,8 +43,8 @@ $activeSection = 'servicos';
 <section class="panel panel--soft">
     <div class="section-header">
         <div>
-            <h2 class="section-title">Dados do servico</h2>
-            <p class="section-copy">Informa&ccedil;&otilde;es do servi&ccedil;o armazenadas para consulta.</p>
+            <h2 class="section-title">Dados do servi&ccedil;o</h2>
+            <p class="section-copy">Dados salvos.</p>
         </div>
     </div>
 
@@ -60,11 +59,11 @@ $activeSection = 'servicos';
         </article>
         <article class="detail-item detail-item--full">
             <span class="detail-label">Nome</span>
-            <p class="detail-value"><?= escapar((string) $servico['nome']) ?></p>
+            <p class="detail-value"><?= escapar($servico['nome']) ?></p>
         </article>
         <article class="detail-item detail-item--full">
-            <span class="detail-label">Descricao</span>
-            <p class="detail-value"><?= nl2br(escapar((string) ($servico['descricao'] ?? ''))) ?></p>
+            <span class="detail-label">Descri&ccedil;&atilde;o</span>
+            <p class="detail-value"><?= nl2br(escapar($servico['descricao'] ?? '')) ?></p>
         </article>
     </div>
 </section>

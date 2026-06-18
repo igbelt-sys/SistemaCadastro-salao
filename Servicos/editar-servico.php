@@ -1,67 +1,63 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
-// esse id acompanha a abertura da tela e tambem a hora de salvar a edicao
+// o id pode vir da url ao abrir a tela ou do post ao salvar
 $id = pegarId($_GET['id'] ?? $_POST['id'] ?? null);
 $erros = [];
 
 if ($id <= 0) {
-    irPara('index.php?msg=' . urlencode('Servico invalido.'));
+    irPara('index.php?msg=' . urlencode('Serviço inválido.'));
 }
 
-// primeiro busca o registro atual para montar o formulario e validar se existe
+// carrega o servico atual para preencher o formulario
 $servico = buscarServico($pdo, $id);
-if ($servico === null) {
-    irPara('index.php?msg=' . urlencode('Servico nao encontrado.'));
+if (!$servico) {
+    irPara('index.php?msg=' . urlencode('Serviço não encontrado.'));
 }
 
-$nome = (string) $servico['nome'];
-$descricao = (string) ($servico['descricao'] ?? '');
+$nome = $servico['nome'];
+$descricao = $servico['descricao'] ?? '';
 $valorBase = number_format((float) $servico['valor_base'], 2, '.', '');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // a nova tentativa da pessoa passa a preencher o formulario e a validacao
-    $nome = trim((string) ($_POST['nome'] ?? ''));
-    $descricao = trim((string) ($_POST['descricao'] ?? ''));
-    $valorBase = normalizarValor((string) ($_POST['valor_base'] ?? ''));
-    // aqui confere se o numero realmente esta pronto para virar valor monetario
+    // quando envia o formulario a nova tentativa passa a valer aqui
+    $nome = trim($_POST['nome'] ?? '');
+    $descricao = trim($_POST['descricao'] ?? '');
+    $valorBase = normalizarValor($_POST['valor_base'] ?? '');
+
+    // tenta transformar o valor digitado em numero de verdade
     $valorValidado = filter_var($valorBase, FILTER_VALIDATE_FLOAT);
 
     if ($nome === '') {
-        $erros[] = 'O nome do servico e obrigatorio.';
+        $erros[] = 'O nome do serviço é obrigatório.';
     }
 
     if ($valorValidado === false || $valorValidado < 0) {
-        $erros[] = 'Informe um valor base valido.';
+        $erros[] = 'Informe um valor base válido.';
     }
 
-    if (empty($erros)) {
-        // atualizar so depois da validacao evita jogar valor torto no servico existente
-        $sql = 'UPDATE servicos
-                SET nome = :nome, descricao = :descricao, valor_base = :valor_base
-                WHERE id = :id';
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(':nome', $nome, PDO::PARAM_STR);
-        if ($descricao === '') {
-            // null continua sendo melhor que texto vazio quando a descricao some
-            $stmt->bindValue(':descricao', null, PDO::PARAM_NULL);
-        } else {
-            $stmt->bindValue(':descricao', $descricao, PDO::PARAM_STR);
-        }
-        // mantem o valor no formato que o banco espera sem depender do jeito que foi digitado
-        $stmt->bindValue(':valor_base', number_format((float) $valorValidado, 2, '.', ''), PDO::PARAM_STR);
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
+    // com tudo certo atualiza o mesmo registro
+    if (!$erros) {
+        $stmt = $pdo->prepare(
+            'UPDATE servicos
+             SET nome = :nome, descricao = :descricao, valor_base = :valor_base
+             WHERE id = :id'
+        );
+        // descricao vazia vira null e o valor vai formatado certinho para o banco
+        $stmt->execute([
+            ':nome' => $nome,
+            ':descricao' => valorOuNulo($descricao),
+            ':valor_base' => number_format((float) $valorValidado, 2, '.', ''),
+            ':id' => $id,
+        ]);
 
-        // no fim volta para os detalhes para bater o olho e ver se ficou certo
-        irPara('visualizar-servico.php?id=' . $id . '&msg=' . urlencode('Servico atualizado com sucesso.'));
+        irPara('visualizar-servico.php?id=' . $id . '&msg=' . urlencode('Serviço atualizado com sucesso.'));
     }
 }
 
-$pageTitle = 'Silvana | Editar servico';
+$pageTitle = 'Silvana | Editar serviço';
 $basePath = '../';
 $activeSection = 'servicos';
 ?>
@@ -69,13 +65,13 @@ $activeSection = 'servicos';
 <?php require __DIR__ . '/../includes/sidebar.php'; ?>
 <section class="page-header">
     <div>
-        <span class="page-eyebrow">Atualizacao de cadastro</span>
-        <h1 class="page-title">Editar servico</h1>
-        <p class="page-description">Atualize descri&ccedil;&atilde;o e valor do servi&ccedil;o sem alterar a l&oacute;gica do cadastro.</p>
+        <span class="page-eyebrow">Servi&ccedil;os</span>
+        <h1 class="page-title">Editar servi&ccedil;o</h1>
+        <p class="page-description">Altere os dados abaixo.</p>
     </div>
     <div class="page-actions">
-        <a class="btn btn--ghost" href="index.php">Voltar para servicos</a>
-        <a class="btn btn--secondary" href="visualizar-servico.php?id=<?= $id ?>">Visualizar servico</a>
+        <a class="btn btn--ghost" href="index.php">Voltar para servi&ccedil;os</a>
+        <a class="btn btn--secondary" href="visualizar-servico.php?id=<?= $id ?>">Visualizar servi&ccedil;o</a>
     </div>
 </section>
 
@@ -91,7 +87,7 @@ $activeSection = 'servicos';
     <div class="section-header">
         <div>
             <h2 class="section-title">Dados para edi&ccedil;&atilde;o</h2>
-            <p class="section-copy">Os campos carregados continuam usando os mesmos nomes e o mesmo processamento.</p>
+            <p class="section-copy">Edite e salve.</p>
         </div>
     </div>
 
@@ -109,12 +105,12 @@ $activeSection = 'servicos';
         </div>
 
         <div class="field field--full">
-            <label for="descricao">Descricao</label>
+            <label for="descricao">Descri&ccedil;&atilde;o</label>
             <textarea name="descricao" id="descricao" rows="5" cols="50"><?= escapar($descricao) ?></textarea>
         </div>
 
         <div class="form-actions field--full">
-            <button class="btn btn--primary" type="submit">Atualizar servico</button>
+            <button class="btn btn--primary" type="submit">Atualizar servi&ccedil;o</button>
             <a class="btn btn--secondary" href="visualizar-servico.php?id=<?= $id ?>">Cancelar</a>
         </div>
     </form>

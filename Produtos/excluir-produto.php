@@ -1,29 +1,27 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
-// o id serve tanto para montar a confirmacao quanto para remover de fato no post
+// o id vem por get para abrir a tela e por post para confirmar
 $id = pegarId($_GET['id'] ?? $_POST['id'] ?? null);
 
 if ($id <= 0) {
-    irPara('index.php?msg=' . urlencode('Produto invalido.'));
+    irPara('index.php?msg=' . urlencode('Produto inválido.'));
 }
 
-// antes de excluir confirma se o registro ainda existe para nao disparar delete no vazio
+// confirma se o produto ainda existe antes de mostrar ou excluir
 $produto = buscarProduto($pdo, $id);
-if ($produto === null) {
-    irPara('index.php?msg=' . urlencode('Produto nao encontrado.'));
+if (!$produto) {
+    irPara('index.php?msg=' . urlencode('Produto não encontrado.'));
 }
 
+// a exclusao so roda no post para nao apagar por engano
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // a exclusao fica presa no post para evitar remocao acidental so por abrir link
     $stmt = $pdo->prepare('DELETE FROM produtos WHERE id = :id');
-    $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-    $stmt->execute();
+    $stmt->execute([':id' => $id]);
 
-    irPara('index.php?msg=' . urlencode('Produto excluido com sucesso.'));
+    irPara('index.php?msg=' . urlencode('Produto excluído com sucesso.'));
 }
 
 $pageTitle = 'Silvana | Excluir produto';
@@ -34,9 +32,9 @@ $activeSection = 'produtos';
 <?php require __DIR__ . '/../includes/sidebar.php'; ?>
 <section class="page-header">
     <div>
-        <span class="page-eyebrow">Acao sensivel</span>
+        <span class="page-eyebrow">Produtos</span>
         <h1 class="page-title">Excluir produto</h1>
-        <p class="page-description">Revise a confirma&ccedil;&atilde;o com cuidado antes de remover este item do cadastro.</p>
+        <p class="page-description">Confirme se quer excluir.</p>
     </div>
     <div class="page-actions">
         <a class="btn btn--ghost" href="index.php">Voltar para produtos</a>
@@ -53,13 +51,13 @@ $activeSection = 'produtos';
                 <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.72 3h16.92a2 2 0 0 0 1.72-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
             </svg>
         </div>
-        <h2 class="confirm-title">Confirmar exclusao</h2>
-        <p class="confirm-copy">Tem certeza que deseja excluir este produto? O processamento continua exatamente o mesmo.</p>
-        <p class="confirm-target"><?= escapar((string) $produto['nome']) ?></p>
+        <h2 class="confirm-title">Confirmar exclus&atilde;o</h2>
+        <p class="confirm-copy">Este produto ser&aacute; removido.</p>
+        <p class="confirm-target"><?= escapar($produto['nome']) ?></p>
 
         <form method="post" class="form-actions confirm-actions">
             <input type="hidden" name="id" value="<?= $id ?>">
-            <button class="btn btn--danger" type="submit">Confirmar exclusao</button>
+            <button class="btn btn--danger" type="submit">Confirmar exclus&atilde;o</button>
             <a class="btn btn--secondary" href="visualizar-produto.php?id=<?= $id ?>">Cancelar</a>
         </form>
     </article>

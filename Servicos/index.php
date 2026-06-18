@@ -1,36 +1,29 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
-// url de busca e mensagem de retorno ficam centralizadas aqui no comeco da tela
-$pesquisa = trim((string) ($_GET['pesquisa'] ?? ''));
-$mensagem = trim((string) ($_GET['msg'] ?? ''));
+// pega a busca e a mensagem que vieram pela url
+$pesquisa = trim($_GET['pesquisa'] ?? '');
+$mensagem = trim($_GET['msg'] ?? '');
+
+// a consulta comeca simples e so ganha filtro se a pessoa pesquisar
+$sql = 'SELECT id, nome, descricao, valor_base FROM servicos';
+$params = [];
 
 if ($pesquisa !== '') {
-    // se tem pesquisa a consulta ja volta filtrada pelo nome do servico
-    $stmt = $pdo->prepare(
-        'SELECT id, nome, descricao, valor_base
-         FROM servicos
-         WHERE nome LIKE :pesquisa
-         ORDER BY nome ASC'
-    );
-    $stmt->bindValue(':pesquisa', '%' . $pesquisa . '%', PDO::PARAM_STR);
-} else {
-    // sem filtro a pagina exibe tudo em ordem alfabetica para facilitar a varredura
-    $stmt = $pdo->prepare(
-        'SELECT id, nome, descricao, valor_base
-         FROM servicos
-         ORDER BY nome ASC'
-    );
+    $sql .= ' WHERE nome LIKE :pesquisa';
+    $params[':pesquisa'] = '%' . $pesquisa . '%';
 }
 
-// executa a consulta depois que o trecho com ou sem filtro foi escolhido
-$stmt->execute();
+$sql .= ' ORDER BY nome ASC';
+
+// executa no final com ou sem filtro
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
 $servicos = $stmt->fetchAll();
 
-$pageTitle = 'Silvana | Servicos';
+$pageTitle = 'Silvana | Serviços';
 $basePath = '../';
 $activeSection = 'servicos';
 ?>
@@ -38,12 +31,12 @@ $activeSection = 'servicos';
 <?php require __DIR__ . '/../includes/sidebar.php'; ?>
 <section class="page-header">
     <div>
-        <span class="page-eyebrow">Gestao de servicos</span>
-        <h1 class="page-title">Servicos</h1>
-        <p class="page-description">Centralize os servi&ccedil;os oferecidos com descri&ccedil;&otilde;es claras e valores acess&iacute;veis.</p>
+        <span class="page-eyebrow">Servi&ccedil;os</span>
+        <h1 class="page-title">Servi&ccedil;os</h1>
+        <p class="page-description">Veja os servi&ccedil;os cadastrados.</p>
     </div>
     <div class="page-actions">
-        <a class="btn btn--primary" href="adicionar-servico.php">Cadastrar servico</a>
+        <a class="btn btn--primary" href="adicionar-servico.php">Cadastrar servi&ccedil;o</a>
     </div>
 </section>
 
@@ -67,14 +60,14 @@ $activeSection = 'servicos';
 <section class="panel">
     <div class="section-header">
         <div>
-            <h2 class="section-title">Lista de servicos</h2>
-            <p class="section-copy">Acesse os servi&ccedil;os cadastrados e siga para visualizar, editar ou excluir.</p>
+            <h2 class="section-title">Lista de servi&ccedil;os</h2>
+            <p class="section-copy">Pesquise ou abra um servi&ccedil;o.</p>
         </div>
         <span class="count-badge"><?= count($servicos) ?></span>
     </div>
 
     <?php if (empty($servicos)): ?>
-        <div class="empty-state">Nenhum servico encontrado.</div>
+        <div class="empty-state">Nenhum servi&ccedil;o encontrado.</div>
     <?php else: ?>
         <div class="table-wrap">
             <table class="data-table">
@@ -83,14 +76,14 @@ $activeSection = 'servicos';
                         <th>ID</th>
                         <th>Nome</th>
                         <th>Valor base</th>
-                        <th>Acoes</th>
+                        <th>A&ccedil;&otilde;es</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($servicos as $servico): ?>
                         <tr>
                             <td><?= (int) $servico['id'] ?></td>
-                            <td><?= escapar((string) $servico['nome']) ?></td>
+                            <td><?= escapar($servico['nome']) ?></td>
                             <td>R$ <?= number_format((float) $servico['valor_base'], 2, ',', '.') ?></td>
                             <td>
                                 <div class="table-actions">

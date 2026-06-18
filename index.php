@@ -1,6 +1,5 @@
 <?php
-// essas variaveis falam para os includes qual tela esta aberta e como montar o visual dela
-$pageTitle = 'Silvana | Inicio';
+$pageTitle = 'Silvana | Início';
 $basePath = '';
 $activeSection = 'inicio';
 $bodyClass = 'home-body';
@@ -22,7 +21,7 @@ require __DIR__ . '/includes/sidebar.php';
             <span></span>
         </div>
         <p class="hero-copy">
-            Gerencie seus clientes, produtos e servi&ccedil;os de forma simples e organizada.
+            Escolha uma área para abrir.
         </p>
     </article>
 </section>
@@ -40,7 +39,7 @@ require __DIR__ . '/includes/sidebar.php';
         <h2 class="dashboard-card__title">Clientes</h2>
         <div class="dashboard-card__rule"></div>
         <p class="dashboard-card__copy">
-            Cadastre, consulte e acompanhe suas clientes com uma visualiza&ccedil;&atilde;o clara e sofisticada.
+            Cadastre e veja as clientes.
         </p>
         <a class="btn btn--primary" href="Clientes/index.php">Acessar</a>
     </article>
@@ -56,7 +55,7 @@ require __DIR__ . '/includes/sidebar.php';
         <h2 class="dashboard-card__title">Produtos</h2>
         <div class="dashboard-card__rule"></div>
         <p class="dashboard-card__copy">
-            Gerencie os produtos utilizados nos atendimentos com um padr&atilde;o visual elegante e funcional.
+            Cadastre e veja os produtos.
         </p>
         <a class="btn btn--primary" href="Produtos/index.php">Acessar</a>
     </article>
@@ -73,7 +72,7 @@ require __DIR__ . '/includes/sidebar.php';
         <h2 class="dashboard-card__title">Servi&ccedil;os</h2>
         <div class="dashboard-card__rule"></div>
         <p class="dashboard-card__copy">
-            Organize os servi&ccedil;os oferecidos com descri&ccedil;&otilde;es, valores e acessos r&aacute;pidos para edi&ccedil;&atilde;o.
+            Cadastre e veja os servi&ccedil;os.
         </p>
         <a class="btn btn--primary" href="Servicos/index.php">Acessar</a>
     </article>

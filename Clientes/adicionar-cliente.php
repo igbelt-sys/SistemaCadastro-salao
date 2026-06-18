@@ -1,69 +1,57 @@
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
-// essas variaveis seguram o que a pessoa digitou para o formulario nao voltar vazio se der erro
+// segura o que a pessoa digitou se o formulario voltar com erro
 $nome = '';
 $telefone = '';
 $observacoes = '';
 $erros = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // primeiro limpa o post e devolve tudo para as variaveis que alimentam o formulario
-    $nome = trim((string) ($_POST['nome'] ?? ''));
-    $telefone = trim((string) ($_POST['telefone'] ?? ''));
-    $observacoes = trim((string) ($_POST['observacoes'] ?? ''));
+    // limpa o post antes de validar
+    $nome = trim($_POST['nome'] ?? '');
+    $telefone = trim($_POST['telefone'] ?? '');
+    $observacoes = trim($_POST['observacoes'] ?? '');
 
-    // sem nome nao faz sentido abrir cadastro porque e o dado mais basico da cliente
     if ($nome === '') {
-        $erros[] = 'O nome da cliente e obrigatorio.';
+        $erros[] = 'O nome da cliente é obrigatório.';
     }
 
-    // esse passo tenta barrar duplicidade ja na aplicacao antes mesmo do banco reclamar
+    // evita cadastrar duas clientes com o mesmo telefone
     $clienteComMesmoTelefone = buscarClientePorTelefone($pdo, $telefone);
-    if ($clienteComMesmoTelefone !== null) {
+    if ($clienteComMesmoTelefone) {
         $erros[] = montarMensagemTelefoneDuplicado($clienteComMesmoTelefone);
     }
 
-    if (empty($erros)) {
-        // so entra no insert quando a validacao passou inteira para nao salvar dado quebrado
-        $sql = 'INSERT INTO clientes (nome, telefone, observacoes)
-                VALUES (:nome, :telefone, :observacoes)
-                RETURNING id';
+    // so salva quando nao sobrou erro
+    if (!$erros) {
         try {
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindValue(':nome', $nome, PDO::PARAM_STR);
-            if ($telefone === '') {
-                // telefone vazio vai como null para o banco entender que nao existe valor ali
-                $stmt->bindValue(':telefone', null, PDO::PARAM_NULL);
-            } else {
-                $stmt->bindValue(':telefone', $telefone, PDO::PARAM_STR);
-            }
-            if ($observacoes === '') {
-                // a mesma ideia vale para observacao para nao guardar string vazia atoa
-                $stmt->bindValue(':observacoes', null, PDO::PARAM_NULL);
-            } else {
-                $stmt->bindValue(':observacoes', $observacoes, PDO::PARAM_STR);
-            }
-            $stmt->execute();
+            $stmt = $pdo->prepare(
+                'INSERT INTO clientes (nome, telefone, observacoes)
+                 VALUES (:nome, :telefone, :observacoes)
+                 RETURNING id'
+            );
+            // telefone e observacao vazios viram null no banco
+            $stmt->execute([
+                ':nome' => $nome,
+                ':telefone' => valorOuNulo($telefone),
+                ':observacoes' => valorOuNulo($observacoes),
+            ]);
 
-            // depois de salvar joga para a tela de detalhes e evita repost se atualizar a pagina
             $id = (int) $stmt->fetchColumn();
             irPara('visualizar-cliente.php?id=' . $id . '&msg=' . urlencode('Cliente cadastrado com sucesso.'));
         } catch (PDOException $erro) {
-            // isso segura aquela corrida rara em que outro cadastro salvou o mesmo telefone quase junto
+            // se outro cadastro salvar no mesmo instante o banco ainda protege aqui
             if (!ehViolacaoTelefoneDuplicado($erro)) {
                 throw $erro;
             }
 
             $clienteComMesmoTelefone = buscarClientePorTelefone($pdo, $telefone);
-            if ($clienteComMesmoTelefone !== null) {
-                $erros[] = montarMensagemTelefoneDuplicado($clienteComMesmoTelefone);
-            } else {
-                $erros[] = 'Ja existe uma cliente cadastrada com este telefone.';
-            }
+            $erros[] = $clienteComMesmoTelefone
+                ? montarMensagemTelefoneDuplicado($clienteComMesmoTelefone)
+                : 'Já existe uma cliente cadastrada com este telefone.';
         }
     }
 }
@@ -76,9 +64,9 @@ $activeSection = 'clientes';
 <?php require __DIR__ . '/../includes/sidebar.php'; ?>
 <section class="page-header">
     <div>
-        <span class="page-eyebrow">Novo cadastro</span>
+        <span class="page-eyebrow">Clientes</span>
         <h1 class="page-title">Cadastrar cliente</h1>
-        <p class="page-description">Preencha os dados principais da cliente sem alterar o fluxo atual do sistema.</p>
+        <p class="page-description">Preencha os campos abaixo.</p>
     </div>
     <div class="page-actions">
         <a class="btn btn--ghost" href="index.php">Voltar para clientes</a>
@@ -97,7 +85,7 @@ $activeSection = 'clientes';
     <div class="section-header">
         <div>
             <h2 class="section-title">Dados da cliente</h2>
-            <p class="section-copy">Os campos abaixo mant&ecirc;m o mesmo envio por POST j&aacute; utilizado pela aplica&ccedil;&atilde;o.</p>
+            <p class="section-copy">Digite os dados e salve.</p>
         </div>
     </div>
 
@@ -113,7 +101,7 @@ $activeSection = 'clientes';
         </div>
 
         <div class="field field--full">
-            <label for="observacoes">Observacoes</label>
+            <label for="observacoes">Observa&ccedil;&otilde;es</label>
             <textarea name="observacoes" id="observacoes" rows="5" cols="50"><?= escapar($observacoes) ?></textarea>
         </div>
 
