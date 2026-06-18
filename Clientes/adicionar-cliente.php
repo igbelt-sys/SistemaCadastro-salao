@@ -4,26 +4,31 @@ declare(strict_types=1);
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// essas variaveis seguram o que a pessoa digitou para o formulario nao voltar vazio se der erro
 $nome = '';
 $telefone = '';
 $observacoes = '';
 $erros = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // primeiro limpa o post e devolve tudo para as variaveis que alimentam o formulario
     $nome = trim((string) ($_POST['nome'] ?? ''));
     $telefone = trim((string) ($_POST['telefone'] ?? ''));
     $observacoes = trim((string) ($_POST['observacoes'] ?? ''));
 
+    // sem nome nao faz sentido abrir cadastro porque e o dado mais basico da cliente
     if ($nome === '') {
         $erros[] = 'O nome da cliente e obrigatorio.';
     }
 
+    // esse passo tenta barrar duplicidade ja na aplicacao antes mesmo do banco reclamar
     $clienteComMesmoTelefone = buscarClientePorTelefone($pdo, $telefone);
     if ($clienteComMesmoTelefone !== null) {
         $erros[] = montarMensagemTelefoneDuplicado($clienteComMesmoTelefone);
     }
 
     if (empty($erros)) {
+        // so entra no insert quando a validacao passou inteira para nao salvar dado quebrado
         $sql = 'INSERT INTO clientes (nome, telefone, observacoes)
                 VALUES (:nome, :telefone, :observacoes)
                 RETURNING id';
@@ -31,20 +36,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare($sql);
             $stmt->bindValue(':nome', $nome, PDO::PARAM_STR);
             if ($telefone === '') {
+                // telefone vazio vai como null para o banco entender que nao existe valor ali
                 $stmt->bindValue(':telefone', null, PDO::PARAM_NULL);
             } else {
                 $stmt->bindValue(':telefone', $telefone, PDO::PARAM_STR);
             }
             if ($observacoes === '') {
+                // a mesma ideia vale para observacao para nao guardar string vazia atoa
                 $stmt->bindValue(':observacoes', null, PDO::PARAM_NULL);
             } else {
                 $stmt->bindValue(':observacoes', $observacoes, PDO::PARAM_STR);
             }
             $stmt->execute();
 
+            // depois de salvar joga para a tela de detalhes e evita repost se atualizar a pagina
             $id = (int) $stmt->fetchColumn();
             irPara('visualizar-cliente.php?id=' . $id . '&msg=' . urlencode('Cliente cadastrado com sucesso.'));
         } catch (PDOException $erro) {
+            // isso segura aquela corrida rara em que outro cadastro salvou o mesmo telefone quase junto
             if (!ehViolacaoTelefoneDuplicado($erro)) {
                 throw $erro;
             }

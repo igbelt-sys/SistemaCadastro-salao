@@ -4,18 +4,21 @@ declare(strict_types=1);
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// o mesmo id atende a tela de confirmacao e o envio final da exclusao
 $id = pegarId($_GET['id'] ?? $_POST['id'] ?? null);
 
 if ($id <= 0) {
     irPara('index.php?msg=' . urlencode('Cliente invalido.'));
 }
 
+// antes de excluir a gente confirma se o cadastro ainda esta la para evitar acao em cima do nada
 $cliente = buscarCliente($pdo, $id);
 if ($cliente === null) {
     irPara('index.php?msg=' . urlencode('Cliente nao encontrado.'));
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // excluir so acontece no post para a remocao nao disparar so de abrir um link
     $stmt = $pdo->prepare('DELETE FROM clientes WHERE id = :id');
     $stmt->bindValue(':id', $id, PDO::PARAM_INT);
     $stmt->execute();

@@ -1,4 +1,5 @@
 <?php
+// essas variaveis falam para os includes qual tela esta aberta e como montar o visual dela
 $pageTitle = 'Silvana | Inicio';
 $basePath = '';
 $activeSection = 'inicio';

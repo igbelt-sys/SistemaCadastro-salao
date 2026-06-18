@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// o id chega por get quando abre a tela e por post quando salva a alteracao
 $id = pegarId($_GET['id'] ?? $_POST['id'] ?? null);
 $erros = [];
 
@@ -11,6 +12,7 @@ if ($id <= 0) {
     irPara('index.php?msg=' . urlencode('Produto invalido.'));
 }
 
+// primeiro puxa o registro atual para preencher a tela e validar se ele existe
 $produto = buscarProduto($pdo, $id);
 if ($produto === null) {
     irPara('index.php?msg=' . urlencode('Produto nao encontrado.'));
@@ -22,10 +24,12 @@ $marca = (string) ($produto['marca'] ?? '');
 $quantidade = (string) ($produto['quantidade'] ?? '0');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // se a pessoa enviou o formulario esses valores passam a ser a nova verdade da tentativa
     $nome = trim((string) ($_POST['nome'] ?? ''));
     $descricao = trim((string) ($_POST['descricao'] ?? ''));
     $marca = trim((string) ($_POST['marca'] ?? ''));
     $quantidade = trim((string) ($_POST['quantidade'] ?? '0'));
+    // aqui a quantidade continua presa a inteiro valido para o estoque nao ficar torto
     $quantidadeValidada = filter_var($quantidade, FILTER_VALIDATE_INT, [
         'options' => ['min_range' => 0],
     ]);
@@ -39,12 +43,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($erros)) {
+        // a atualizacao so acontece depois da validacao porque ela mexe direto no registro existente
         $sql = 'UPDATE produtos
                 SET nome = :nome, descricao = :descricao, marca = :marca, quantidade = :quantidade
                 WHERE id = :id';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':nome', $nome, PDO::PARAM_STR);
         if ($descricao === '') {
+            // manter null aqui evita salvar string vazia quando a descricao for apagada
             $stmt->bindValue(':descricao', null, PDO::PARAM_NULL);
         } else {
             $stmt->bindValue(':descricao', $descricao, PDO::PARAM_STR);
@@ -58,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
 
+        // no fim volta para os detalhes porque e o lugar mais natural para conferir a mudanca
         irPara('visualizar-produto.php?id=' . $id . '&msg=' . urlencode('Produto atualizado com sucesso.'));
     }
 }

@@ -4,10 +4,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// aqui a gente pega o que veio da url para montar a busca e mostrar aviso depois de redirecionar
 $pesquisa = trim((string) ($_GET['pesquisa'] ?? ''));
 $mensagem = trim((string) ($_GET['msg'] ?? ''));
 
 if ($pesquisa !== '') {
+    // com texto preenchido a lista ja volta filtrada para facilitar achar a cliente
     $stmt = $pdo->prepare(
         'SELECT id, nome, telefone, observacoes, criado_em
          FROM clientes
@@ -16,6 +18,7 @@ if ($pesquisa !== '') {
     );
     $stmt->bindValue(':pesquisa', '%' . $pesquisa . '%', PDO::PARAM_STR);
 } else {
+    // sem pesquisa a ideia e trazer tudo ja ordenado para a tela nascer completa
     $stmt = $pdo->prepare(
         'SELECT id, nome, telefone, observacoes, criado_em
          FROM clientes
@@ -23,6 +26,7 @@ if ($pesquisa !== '') {
     );
 }
 
+// a consulta so roda depois que os parametros ficaram certinhos
 $stmt->execute();
 $clientes = $stmt->fetchAll();
 

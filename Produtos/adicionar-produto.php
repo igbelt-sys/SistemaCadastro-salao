@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// isso segura os valores do formulario caso a validacao mande tentar de novo
 $nome = '';
 $descricao = '';
 $marca = '';
@@ -11,14 +12,17 @@ $quantidade = '0';
 $erros = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // limpa o que veio do post e ja reaproveita nas variaveis que voltam para a tela
     $nome = trim((string) ($_POST['nome'] ?? ''));
     $descricao = trim((string) ($_POST['descricao'] ?? ''));
     $marca = trim((string) ($_POST['marca'] ?? ''));
     $quantidade = trim((string) ($_POST['quantidade'] ?? '0'));
+    // aqui a quantidade precisa virar inteiro valido e sem numero negativo
     $quantidadeValidada = filter_var($quantidade, FILTER_VALIDATE_INT, [
         'options' => ['min_range' => 0],
     ]);
 
+    // produto sem nome vira confusao na lista entao barra logo de cara
     if ($nome === '') {
         $erros[] = 'O nome do produto e obrigatorio.';
     }
@@ -28,12 +32,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($erros)) {
+        // so grava quando tudo passou porque a listagem depende desses campos estarem coerentes
         $sql = 'INSERT INTO produtos (nome, descricao, marca, quantidade)
                 VALUES (:nome, :descricao, :marca, :quantidade)
                 RETURNING id';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':nome', $nome, PDO::PARAM_STR);
         if ($descricao === '') {
+            // texto opcional vazio vira null para o banco guardar ausencia de dado de forma limpa
             $stmt->bindValue(':descricao', null, PDO::PARAM_NULL);
         } else {
             $stmt->bindValue(':descricao', $descricao, PDO::PARAM_STR);
@@ -46,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bindValue(':quantidade', (int) $quantidadeValidada, PDO::PARAM_INT);
         $stmt->execute();
 
+        // depois do cadastro ja pula para os detalhes e evita novo envio no refresh
         $id = (int) $stmt->fetchColumn();
         irPara('visualizar-produto.php?id=' . $id . '&msg=' . urlencode('Produto cadastrado com sucesso.'));
     }

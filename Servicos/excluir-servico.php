@@ -4,18 +4,21 @@ declare(strict_types=1);
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// esse id atende a confirmacao e o delete final no envio do formulario
 $id = pegarId($_GET['id'] ?? $_POST['id'] ?? null);
 
 if ($id <= 0) {
     irPara('index.php?msg=' . urlencode('Servico invalido.'));
 }
 
+// confirmar existencia antes do delete evita operar em registro que ja sumiu
 $servico = buscarServico($pdo, $id);
 if ($servico === null) {
     irPara('index.php?msg=' . urlencode('Servico nao encontrado.'));
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // delete so no post para nao correr risco de exclusao por clique perdido
     $stmt = $pdo->prepare('DELETE FROM servicos WHERE id = :id');
     $stmt->bindValue(':id', $id, PDO::PARAM_INT);
     $stmt->execute();

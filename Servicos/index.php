@@ -4,10 +4,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// url de busca e mensagem de retorno ficam centralizadas aqui no comeco da tela
 $pesquisa = trim((string) ($_GET['pesquisa'] ?? ''));
 $mensagem = trim((string) ($_GET['msg'] ?? ''));
 
 if ($pesquisa !== '') {
+    // se tem pesquisa a consulta ja volta filtrada pelo nome do servico
     $stmt = $pdo->prepare(
         'SELECT id, nome, descricao, valor_base
          FROM servicos
@@ -16,6 +18,7 @@ if ($pesquisa !== '') {
     );
     $stmt->bindValue(':pesquisa', '%' . $pesquisa . '%', PDO::PARAM_STR);
 } else {
+    // sem filtro a pagina exibe tudo em ordem alfabetica para facilitar a varredura
     $stmt = $pdo->prepare(
         'SELECT id, nome, descricao, valor_base
          FROM servicos
@@ -23,6 +26,7 @@ if ($pesquisa !== '') {
     );
 }
 
+// executa a consulta depois que o trecho com ou sem filtro foi escolhido
 $stmt->execute();
 $servicos = $stmt->fetchAll();
 

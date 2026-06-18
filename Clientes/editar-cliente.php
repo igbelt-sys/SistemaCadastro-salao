@@ -4,13 +4,16 @@ declare(strict_types=1);
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// o id pode vir por get ao abrir a tela ou por post ao salvar a edicao
 $id = pegarId($_GET['id'] ?? $_POST['id'] ?? null);
 $erros = [];
 
 if ($id <= 0) {
+    // se o id vier torto nem segue porque todo o resto depende dele
     irPara('index.php?msg=' . urlencode('Cliente invalido.'));
 }
 
+// carrega o cadastro uma vez so e reaproveita os dados para preencher a tela
 $cliente = buscarCliente($pdo, $id);
 if ($cliente === null) {
     irPara('index.php?msg=' . urlencode('Cliente nao encontrado.'));
@@ -22,6 +25,7 @@ $observacoes = (string) ($cliente['observacoes'] ?? '');
 $telefoneOriginal = $telefone;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // quando envia o formulario a gente substitui os dados antigos pela nova tentativa
     $nome = trim((string) ($_POST['nome'] ?? ''));
     $telefone = trim((string) ($_POST['telefone'] ?? ''));
     $observacoes = trim((string) ($_POST['observacoes'] ?? ''));
@@ -30,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erros[] = 'O nome da cliente e obrigatorio.';
     }
 
+    // so investiga duplicidade se o telefone mudou de verdade para nao gastar consulta a toa
     if (normalizarTelefone($telefone) !== normalizarTelefone($telefoneOriginal)) {
         $clienteComMesmoTelefone = buscarClientePorTelefone($pdo, $telefone, $id);
         if ($clienteComMesmoTelefone !== null) {
@@ -38,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($erros)) {
+        // com tudo validado a atualizacao acontece mantendo o mesmo registro
         $sql = 'UPDATE clientes
                 SET nome = :nome, telefone = :telefone, observacoes = :observacoes
                 WHERE id = :id';
@@ -45,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare($sql);
             $stmt->bindValue(':nome', $nome, PDO::PARAM_STR);
             if ($telefone === '') {
+                // se apagou o telefone a gente grava null e nao uma string vazia
                 $stmt->bindValue(':telefone', null, PDO::PARAM_NULL);
             } else {
                 $stmt->bindValue(':telefone', $telefone, PDO::PARAM_STR);
@@ -57,8 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
 
+            // depois da edicao volta para os detalhes porque ali ja da para conferir o resultado
             irPara('visualizar-cliente.php?id=' . $id . '&msg=' . urlencode('Cliente atualizado com sucesso.'));
         } catch (PDOException $erro) {
+            // aqui repete a defesa do banco caso a duplicidade so apareca no momento do save
             if (!ehViolacaoTelefoneDuplicado($erro)) {
                 throw $erro;
             }

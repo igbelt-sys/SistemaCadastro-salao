@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// esse id acompanha a abertura da tela e tambem a hora de salvar a edicao
 $id = pegarId($_GET['id'] ?? $_POST['id'] ?? null);
 $erros = [];
 
@@ -11,6 +12,7 @@ if ($id <= 0) {
     irPara('index.php?msg=' . urlencode('Servico invalido.'));
 }
 
+// primeiro busca o registro atual para montar o formulario e validar se existe
 $servico = buscarServico($pdo, $id);
 if ($servico === null) {
     irPara('index.php?msg=' . urlencode('Servico nao encontrado.'));
@@ -21,9 +23,11 @@ $descricao = (string) ($servico['descricao'] ?? '');
 $valorBase = number_format((float) $servico['valor_base'], 2, '.', '');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // a nova tentativa da pessoa passa a preencher o formulario e a validacao
     $nome = trim((string) ($_POST['nome'] ?? ''));
     $descricao = trim((string) ($_POST['descricao'] ?? ''));
     $valorBase = normalizarValor((string) ($_POST['valor_base'] ?? ''));
+    // aqui confere se o numero realmente esta pronto para virar valor monetario
     $valorValidado = filter_var($valorBase, FILTER_VALIDATE_FLOAT);
 
     if ($nome === '') {
@@ -35,20 +39,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($erros)) {
+        // atualizar so depois da validacao evita jogar valor torto no servico existente
         $sql = 'UPDATE servicos
                 SET nome = :nome, descricao = :descricao, valor_base = :valor_base
                 WHERE id = :id';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':nome', $nome, PDO::PARAM_STR);
         if ($descricao === '') {
+            // null continua sendo melhor que texto vazio quando a descricao some
             $stmt->bindValue(':descricao', null, PDO::PARAM_NULL);
         } else {
             $stmt->bindValue(':descricao', $descricao, PDO::PARAM_STR);
         }
+        // mantem o valor no formato que o banco espera sem depender do jeito que foi digitado
         $stmt->bindValue(':valor_base', number_format((float) $valorValidado, 2, '.', ''), PDO::PARAM_STR);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
 
+        // no fim volta para os detalhes para bater o olho e ver se ficou certo
         irPara('visualizar-servico.php?id=' . $id . '&msg=' . urlencode('Servico atualizado com sucesso.'));
     }
 }

@@ -4,10 +4,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// esses dois caras chegam da url e controlam a busca e o aviso no topo da tela
 $pesquisa = trim((string) ($_GET['pesquisa'] ?? ''));
 $mensagem = trim((string) ($_GET['msg'] ?? ''));
 
 if ($pesquisa !== '') {
+    // quando tem texto a consulta procura por nome ou marca para achar produto mais rapido
     $stmt = $pdo->prepare(
         'SELECT id, nome, descricao, marca, quantidade
          FROM produtos
@@ -16,6 +18,7 @@ if ($pesquisa !== '') {
     );
     $stmt->bindValue(':pesquisa', '%' . $pesquisa . '%', PDO::PARAM_STR);
 } else {
+    // sem filtro a tela mostra o catalogo inteiro ordenado pelo nome
     $stmt = $pdo->prepare(
         'SELECT id, nome, descricao, marca, quantidade
          FROM produtos
@@ -23,6 +26,7 @@ if ($pesquisa !== '') {
     );
 }
 
+// so executa depois de montar a consulta certa para cada caso
 $stmt->execute();
 $produtos = $stmt->fetchAll();
 

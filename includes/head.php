@@ -1,4 +1,5 @@
 <?php
+// cada pagina pode mandar esses valores prontos mas se esquecer a gente cai num padrao seguro
 $pageTitle = $pageTitle ?? 'Silvana | Sistema';
 $basePath = $basePath ?? '';
 $bodyClass = $bodyClass ?? '';

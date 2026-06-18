@@ -5,17 +5,20 @@ require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
 $id = pegarId($_GET['id'] ?? null);
+// a mensagem chega por get para aparecer depois de cadastrar historico ou editar a cliente
 $mensagem = trim((string) ($_GET['msg'] ?? ''));
 
 if ($id <= 0) {
     irPara('index.php?msg=' . urlencode('Cliente invalido.'));
 }
 
+// essa tela depende do cadastro principal entao primeiro garante que a cliente existe
 $cliente = buscarCliente($pdo, $id);
 if ($cliente === null) {
     irPara('index.php?msg=' . urlencode('Cliente nao encontrado.'));
 }
 
+// aqui puxa todo o historico ligado a cliente para montar a parte de acompanhamento da tela
 $stmt = $pdo->prepare(
     'SELECT h.id, h.data_historico, h.observacao, s.nome AS servico_nome
      FROM historico_clientes h
@@ -27,6 +30,7 @@ $stmt->bindValue(':cliente_id', $id, PDO::PARAM_INT);
 $stmt->execute();
 $historicos = $stmt->fetchAll();
 
+// essa lista de servicos alimenta o select do formulario sem obrigar a sair da mesma pagina
 $stmtServicos = $pdo->prepare(
     'SELECT id, nome, valor_base
      FROM servicos

@@ -4,18 +4,21 @@ declare(strict_types=1);
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// o id serve tanto para montar a confirmacao quanto para remover de fato no post
 $id = pegarId($_GET['id'] ?? $_POST['id'] ?? null);
 
 if ($id <= 0) {
     irPara('index.php?msg=' . urlencode('Produto invalido.'));
 }
 
+// antes de excluir confirma se o registro ainda existe para nao disparar delete no vazio
 $produto = buscarProduto($pdo, $id);
 if ($produto === null) {
     irPara('index.php?msg=' . urlencode('Produto nao encontrado.'));
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // a exclusao fica presa no post para evitar remocao acidental so por abrir link
     $stmt = $pdo->prepare('DELETE FROM produtos WHERE id = :id');
     $stmt->bindValue(':id', $id, PDO::PARAM_INT);
     $stmt->execute();

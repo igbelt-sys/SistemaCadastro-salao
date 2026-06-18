@@ -5,12 +5,14 @@ require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
 $id = pegarId($_GET['id'] ?? null);
+// a mensagem entra por get porque normalmente vem de cadastro ou edicao terminada
 $mensagem = trim((string) ($_GET['msg'] ?? ''));
 
 if ($id <= 0) {
     irPara('index.php?msg=' . urlencode('Produto invalido.'));
 }
 
+// sem produto valido nao tem detalhe para mostrar entao volta para a lista
 $produto = buscarProduto($pdo, $id);
 if ($produto === null) {
     irPara('index.php?msg=' . urlencode('Produto nao encontrado.'));

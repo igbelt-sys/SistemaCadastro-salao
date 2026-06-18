@@ -4,17 +4,21 @@ declare(strict_types=1);
 require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
+// essas variaveis guardam a ultima tentativa do formulario caso apareca erro
 $nome = '';
 $descricao = '';
 $valorBase = '';
 $erros = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // limpa os campos do post e ja normaliza o valor para aceitar virgula ou ponto
     $nome = trim((string) ($_POST['nome'] ?? ''));
     $descricao = trim((string) ($_POST['descricao'] ?? ''));
     $valorBase = normalizarValor((string) ($_POST['valor_base'] ?? ''));
+    // aqui o valor precisa realmente virar numero para seguir para o banco
     $valorValidado = filter_var($valorBase, FILTER_VALIDATE_FLOAT);
 
+    // nome e o minimo para a lista de servicos fazer sentido
     if ($nome === '') {
         $erros[] = 'O nome do servico e obrigatorio.';
     }
@@ -24,19 +28,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($erros)) {
+        // so insere quando nome e valor passaram para nao nascer servico quebrado
         $sql = 'INSERT INTO servicos (nome, descricao, valor_base)
                 VALUES (:nome, :descricao, :valor_base)
                 RETURNING id';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':nome', $nome, PDO::PARAM_STR);
         if ($descricao === '') {
+            // descricao opcional vazia vai como null e deixa o banco mais limpo
             $stmt->bindValue(':descricao', null, PDO::PARAM_NULL);
         } else {
             $stmt->bindValue(':descricao', $descricao, PDO::PARAM_STR);
         }
+        // formatar com duas casas evita salvar valor com formato baguncado
         $stmt->bindValue(':valor_base', number_format((float) $valorValidado, 2, '.', ''), PDO::PARAM_STR);
         $stmt->execute();
 
+        // depois do insert cai nos detalhes e evita envio repetido ao atualizar a pagina
         $id = (int) $stmt->fetchColumn();
         irPara('visualizar-servico.php?id=' . $id . '&msg=' . urlencode('Servico cadastrado com sucesso.'));
     }

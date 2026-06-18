@@ -5,12 +5,14 @@ require_once __DIR__ . '/_funcoes.php';
 
 $pdo = conectar();
 $id = pegarId($_GET['id'] ?? null);
+// essa mensagem costuma vir das telas que mandam de volta para os detalhes
 $mensagem = trim((string) ($_GET['msg'] ?? ''));
 
 if ($id <= 0) {
     irPara('index.php?msg=' . urlencode('Servico invalido.'));
 }
 
+// se nao achar o servico nao compensa seguir montando a pagina
 $servico = buscarServico($pdo, $id);
 if ($servico === null) {
     irPara('index.php?msg=' . urlencode('Servico nao encontrado.'));
